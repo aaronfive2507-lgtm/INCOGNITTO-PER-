@@ -1,0 +1,2011 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Incógnito Perú · Plataforma de Mystery Shopping</title>
+    <meta
+      name="description"
+      content="Plataforma interna de capacitación para evaluadores de mystery shopping de Incógnito Perú."
+    />
+    <style>
+      :root {
+        --rojo: #8b0000;
+        --rojo-hover: #6f0000;
+        --blanco: #ffffff;
+        --gris-claro: #f5f5f5;
+        --gris-borde: #e5e5e5;
+        --gris-oscuro: #1a1a1a;
+        --gris-medio: #666;
+        --dorado: #c8a96e;
+        --verde: #2e7d32;
+        --verde-bg: #e8f5e9;
+        --rojo-bg: #ffebee;
+        --amarillo-bg: #fff8e1;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        overflow-x: hidden;
+        max-width: 100vw;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: var(--gris-oscuro);
+        background: var(--gris-claro);
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+      }
+      input,
+      select,
+      textarea {
+        font-family: inherit;
+        font-size: 1rem;
+        width: 100%;
+        padding: 0.7rem 0.8rem;
+        border: 1px solid var(--gris-borde);
+        border-radius: 6px;
+        background: var(--blanco);
+        color: var(--gris-oscuro);
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 2px solid var(--rojo);
+        outline-offset: 1px;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+      a {
+        color: var(--rojo);
+        text-decoration: none;
+      }
+
+      /* HEADER */
+      header.app-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--rojo);
+        color: var(--blanco);
+        padding: 0.85rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      }
+      .logo {
+        font-weight: 800;
+        font-size: 1.1rem;
+        letter-spacing: 0.3px;
+      }
+      .vista-tag {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+      }
+
+      main {
+        flex: 1;
+        width: 100%;
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 1.25rem 1rem 2rem;
+      }
+
+      /* BUTTONS */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.75rem 1.1rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: background 0.15s;
+        border: 1px solid transparent;
+      }
+      .btn-primary {
+        background: var(--rojo);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--rojo-hover);
+      }
+      .btn-primary:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .btn-secondary {
+        background: var(--gris-claro);
+        color: var(--gris-oscuro);
+        border-color: var(--gris-borde);
+      }
+      .btn-secondary:hover {
+        background: #ececec;
+      }
+      .btn-danger {
+        background: transparent;
+        color: var(--rojo);
+        border-color: var(--rojo);
+      }
+      .btn-danger:hover {
+        background: var(--rojo);
+        color: #fff;
+      }
+      .btn-link {
+        color: var(--rojo);
+        background: none;
+        padding: 0.4rem 0.6rem;
+        font-weight: 600;
+      }
+
+      /* FOOTER */
+      footer {
+        text-align: center;
+        padding: 1.5rem 1rem;
+        color: var(--gris-medio);
+        font-size: 0.8rem;
+        border-top: 1px solid var(--gris-borde);
+        background: var(--blanco);
+      }
+      footer .admin-btn {
+        font-size: 0.75rem;
+        color: #999;
+        margin-left: 0.5rem;
+        text-decoration: underline;
+      }
+
+      /* TOAST */
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: var(--gris-oscuro);
+        color: #fff;
+        padding: 0.8rem 1.2rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        opacity: 0;
+        transition: all 0.3s;
+        z-index: 200;
+      }
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+
+      /* CARDS / CATEGORIA */
+      .h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+      }
+      .subtitle {
+        color: var(--gris-medio);
+        margin-bottom: 1.2rem;
+        font-size: 0.95rem;
+      }
+      .acceso-box {
+        background: var(--blanco);
+        padding: 1.2rem;
+        border-radius: 8px;
+        border: 1px solid var(--gris-borde);
+        margin-bottom: 1.5rem;
+      }
+      .acceso-box .row {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
+        flex-wrap: wrap;
+      }
+      .acceso-box .row input {
+        flex: 1;
+        min-width: 160px;
+        text-transform: uppercase;
+      }
+      .err {
+        color: var(--rojo);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        display: none;
+      }
+      .err.show {
+        display: block;
+      }
+
+      .cat-section {
+        margin-bottom: 1.5rem;
+      }
+      .cat-title {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0.8rem 0 0.6rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--gris-oscuro);
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 0.7rem;
+      }
+      .card {
+        background: var(--blanco);
+        border: 1px solid var(--gris-borde);
+        border-radius: 8px;
+        padding: 0.9rem;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          transform 0.1s;
+      }
+      .card:hover {
+        border-color: var(--rojo);
+        transform: translateY(-1px);
+      }
+      .card-nombre {
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        font-size: 0.95rem;
+      }
+      .card-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .badge {
+        display: inline-block;
+        background: var(--dorado);
+        color: #fff;
+        padding: 0.15rem 0.5rem;
+        font-size: 0.7rem;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .lock {
+        color: var(--gris-medio);
+        font-size: 0.9rem;
+      }
+
+      /* PROGRESS */
+      .progress {
+        display: flex;
+        background: var(--blanco);
+        border: 1px solid var(--gris-borde);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1.2rem;
+        position: sticky;
+        top: 60px;
+        z-index: 40;
+      }
+      .step {
+        flex: 1;
+        padding: 0.7rem 0.5rem;
+        text-align: center;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--gris-medio);
+        border-right: 1px solid var(--gris-borde);
+        background: var(--blanco);
+      }
+      .step:last-child {
+        border-right: none;
+      }
+      .step.active {
+        background: var(--rojo);
+        color: #fff;
+      }
+      .step.done {
+        color: var(--verde);
+      }
+
+      /* BRIEFING */
+      .video-wrap {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%;
+        background: #222;
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 1rem 0;
+      }
+      .video-wrap iframe,
+      .video-wrap .ph {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+      .video-wrap .ph {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #bbb;
+        background: #333;
+      }
+      .info-card {
+        background: var(--blanco);
+        padding: 1rem;
+        border-radius: 6px;
+        border-left: 4px solid var(--rojo);
+        margin-bottom: 0.8rem;
+        border-top: 1px solid var(--gris-borde);
+        border-right: 1px solid var(--gris-borde);
+        border-bottom: 1px solid var(--gris-borde);
+      }
+      .info-card h3 {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        color: var(--rojo);
+      }
+      .info-card ul {
+        padding-left: 1.2rem;
+      }
+      .info-card li {
+        margin-bottom: 0.25rem;
+      }
+      .info-card.alerta {
+        background: var(--amarillo-bg);
+        border-left-color: var(--dorado);
+      }
+
+      /* QUIZ */
+      .quiz-q {
+        background: var(--blanco);
+        padding: 1.2rem;
+        border-radius: 8px;
+        border: 1px solid var(--gris-borde);
+      }
+      .quiz-q h3 {
+        margin-bottom: 1rem;
+        font-size: 1.05rem;
+      }
+      .quiz-opt {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 0.8rem 1rem;
+        border: 1px solid var(--gris-borde);
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+        background: var(--blanco);
+        transition: all 0.15s;
+      }
+      .quiz-opt:hover:not(:disabled) {
+        border-color: var(--rojo);
+      }
+      .quiz-opt.correct {
+        background: var(--verde-bg);
+        border-color: var(--verde);
+      }
+      .quiz-opt.wrong {
+        background: var(--rojo-bg);
+        border-color: var(--rojo);
+      }
+      .quiz-opt:disabled {
+        cursor: default;
+      }
+      .feedback {
+        margin-top: 0.8rem;
+        padding: 0.8rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+      }
+      .feedback.ok {
+        background: var(--verde-bg);
+        color: #1b5e20;
+      }
+      .feedback.bad {
+        background: var(--rojo-bg);
+        color: #7f0000;
+      }
+
+      /* CHAT */
+      .chat-wrap {
+        background: var(--blanco);
+        border: 1px solid var(--gris-borde);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        height: 60vh;
+        min-height: 380px;
+        overflow: hidden;
+      }
+      .faq-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        padding: 0.7rem;
+        border-bottom: 1px solid var(--gris-borde);
+        background: var(--gris-claro);
+      }
+      .faq-btn {
+        font-size: 0.78rem;
+        padding: 0.4rem 0.7rem;
+        background: #fff;
+        border: 1px solid var(--gris-borde);
+        border-radius: 20px;
+        color: var(--gris-oscuro);
+      }
+      .faq-btn:hover {
+        border-color: var(--rojo);
+        color: var(--rojo);
+      }
+      .msgs {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+      .msg {
+        max-width: 80%;
+        padding: 0.65rem 0.85rem;
+        border-radius: 14px;
+        font-size: 0.92rem;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      .msg.user {
+        background: var(--rojo);
+        color: #fff;
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+      }
+      .msg.bot {
+        background: var(--gris-claro);
+        color: var(--gris-oscuro);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+      }
+      .typing {
+        display: inline-flex;
+        gap: 3px;
+      }
+      .typing span {
+        width: 6px;
+        height: 6px;
+        background: var(--gris-medio);
+        border-radius: 50%;
+        animation: bnc 1.2s infinite;
+      }
+      .typing span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .typing span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes bnc {
+        0%,
+        60%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.4;
+        }
+        30% {
+          transform: translateY(-4px);
+          opacity: 1;
+        }
+      }
+      .chat-input {
+        display: flex;
+        gap: 0.4rem;
+        padding: 0.6rem;
+        border-top: 1px solid var(--gris-borde);
+        background: #fff;
+      }
+      .chat-input input {
+        flex: 1;
+      }
+      .send-btn {
+        background: var(--rojo);
+        color: #fff;
+        border-radius: 50%;
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.1rem;
+      }
+      .send-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      /* ADMIN */
+      .tabs {
+        display: flex;
+        border-bottom: 2px solid var(--gris-borde);
+        margin-bottom: 1.2rem;
+      }
+      .tab {
+        padding: 0.7rem 1rem;
+        font-weight: 600;
+        color: var(--gris-medio);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+      }
+      .tab.active {
+        color: var(--rojo);
+        border-color: var(--rojo);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border: 1px solid var(--gris-borde);
+        border-radius: 8px;
+        overflow: hidden;
+        font-size: 0.88rem;
+      }
+      th,
+      td {
+        padding: 0.7rem;
+        text-align: left;
+        border-bottom: 1px solid var(--gris-borde);
+      }
+      th {
+        background: var(--gris-claro);
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .row-actions {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .form-group {
+        margin-bottom: 1.1rem;
+      }
+      .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+        font-size: 0.9rem;
+      }
+      .form-group .hint {
+        font-size: 0.78rem;
+        color: var(--gris-medio);
+        margin-top: 0.25rem;
+      }
+      .dyn-item {
+        display: flex;
+        gap: 0.4rem;
+        margin-bottom: 0.4rem;
+        align-items: center;
+      }
+      .dyn-item input {
+        flex: 1;
+      }
+      .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: var(--gris-claro);
+        border: 1px solid var(--gris-borde);
+        font-weight: 700;
+        color: var(--gris-oscuro);
+      }
+      .icon-btn.add {
+        background: var(--rojo);
+        color: #fff;
+        border-color: var(--rojo);
+      }
+      .icon-btn:hover {
+        opacity: 0.85;
+      }
+      .quiz-edit {
+        border: 1px solid var(--gris-borde);
+        border-radius: 8px;
+        padding: 0.9rem;
+        margin-bottom: 0.7rem;
+        background: var(--gris-claro);
+      }
+      .quiz-edit .q-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.6rem;
+      }
+      .quiz-edit .q-head strong {
+        font-size: 0.85rem;
+        color: var(--gris-medio);
+        text-transform: uppercase;
+      }
+      .opt-row {
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+        margin-bottom: 0.3rem;
+      }
+      .opt-row input[type="radio"] {
+        width: auto;
+      }
+      .opt-row input[type="text"] {
+        flex: 1;
+      }
+      .form-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gris-borde);
+      }
+
+      /* RESULTS */
+      .result-card {
+        background: #fff;
+        border: 1px solid var(--gris-borde);
+        border-radius: 8px;
+        padding: 2rem 1.2rem;
+        text-align: center;
+      }
+      .result-card .score {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--rojo);
+        margin: 0.5rem 0;
+      }
+
+      /* MODAL */
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        padding: 1rem;
+      }
+      .modal.show {
+        display: flex;
+      }
+      .modal-box {
+        background: #fff;
+        border-radius: 10px;
+        padding: 1.5rem;
+        max-width: 380px;
+        width: 100%;
+      }
+      .modal-box h2 {
+        margin-bottom: 0.8rem;
+        font-size: 1.1rem;
+      }
+
+      @media (max-width: 600px) {
+        .h1 {
+          font-size: 1.35rem;
+        }
+        .progress {
+          top: 54px;
+        }
+        .step {
+          font-size: 0.7rem;
+          padding: 0.6rem 0.3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="logo">Incógnito Perú</div>
+      <div class="vista-tag" id="vistaTag">Evaluador</div>
+    </header>
+
+    <main id="app"></main>
+
+    <footer>
+      © Incógnito Perú · Plataforma interna
+      <button class="admin-btn" id="adminTrigger">Admin</button>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="modal" id="adminModal">
+      <div class="modal-box">
+        <h2>Acceso de administrador</h2>
+        <p style="font-size: 0.85rem; color: var(--gris-medio); margin-bottom: 0.8rem">
+          Ingresa la contraseña maestra.
+        </p>
+        <input type="password" id="adminPass" placeholder="Contraseña" />
+        <div class="err" id="adminErr">Contraseña incorrecta.</div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem">
+          <button class="btn btn-secondary" id="adminCancel" style="flex: 1">Cancelar</button>
+          <button class="btn btn-primary" id="adminOk" style="flex: 1">Ingresar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ============================================================
+   INCÓGNITO PERÚ — Mystery Shopping Platform
+   ============================================================ */
+
+      const CHAT_ENDPOINT = "https://xmzimdjiwrzxdczpnlxw.supabase.co/functions/v1/anthropic-chat";
+      const CHAT_ANON_KEY = "sb_publishable_QgyPfBfFo_5HyvAmMGQkSg_QuQpmWr6";
+      const ADMIN_PASSWORD = "INCOGNITO_ADMIN_2024";
+      const LS_KEY = "incognito_capacitaciones";
+
+      const CATEGORIAS = ["Concesionarios de Autos", "Restaurantes", "Tiendas y Servicios", "Otro"];
+      const CAT_ICONS = {
+        "Concesionarios de Autos": "🚗",
+        Restaurantes: "🍽️",
+        "Tiendas y Servicios": "🛍️",
+        Otro: "📋",
+      };
+
+      const PROMPT_DEFAULT =
+        "Eres el asistente de misión de Incógnito Perú. El evaluador visita [nombre_local]. Su perfil es: [perfil_evaluador]. Los focos son: [focos]. No debe revelar su identidad. Responde dudas operativas de forma breve y práctica.";
+
+      /* ---------- DATA SEED ---------- */
+      const SEED = [
+        {
+          id: "kia-001",
+          nombre_local: "Concesionaria Kia Perú",
+          categoria: "Concesionarios de Autos",
+          codigo_acceso: "KIA2024",
+          video_youtube_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+          perfil_evaluador:
+            "Cliente de 30-45 años interesado en financiamiento vehicular para un Kia Seltos o Sportage. Trabajas en una empresa privada con ingresos estables.",
+          focos: [
+            "Disponibilidad de stock",
+            "Tiempos de entrega",
+            "Trámites de placas",
+            "Test drive",
+          ],
+          alerta_identidad:
+            "No reveles en ningún momento que eres un evaluador de Incógnito Perú. Si te preguntan tu DNI, da uno genérico verbal.",
+          preguntas_quiz: [
+            {
+              pregunta: "¿Cuál es tu perfil durante la visita?",
+              opciones: [
+                "Periodista",
+                "Cliente con interés en financiamiento",
+                "Técnico mecánico",
+                "Ejecutivo de otra marca",
+              ],
+              correcta: 1,
+              explicacion:
+                "Debes actuar como un cliente que evalúa opciones de financiamiento vehicular.",
+            },
+            {
+              pregunta: "¿Qué modelos debes consultar prioritariamente?",
+              opciones: [
+                "Picanto y Rio",
+                "Seltos y Sportage",
+                "Carnival y Sorento",
+                "Solo eléctricos",
+              ],
+              correcta: 1,
+              explicacion: "El perfil indica interés en SUVs medianas: Seltos y Sportage.",
+            },
+            {
+              pregunta: "Si te ofrecen el test drive, ¿qué debes hacer?",
+              opciones: [
+                "Rechazarlo",
+                "Aceptarlo y evaluar el proceso",
+                "Pedir manejarlo solo",
+                "Filmarlo abiertamente",
+              ],
+              correcta: 1,
+              explicacion: "Aceptar el test drive es parte clave de la evaluación de experiencia.",
+            },
+            {
+              pregunta: "¿Qué NO debes hacer durante la visita?",
+              opciones: [
+                "Hacer preguntas",
+                "Pedir cotización",
+                "Revelar tu identidad de evaluador",
+                "Tomar nota mental",
+              ],
+              correcta: 2,
+              explicacion: "Nunca reveles que eres evaluador, esto invalida toda la misión.",
+            },
+          ],
+          preguntas_frecuentes: [
+            "¿Qué hago si me preguntan mi presupuesto?",
+            "¿Cómo pido el test drive sin parecer sospechoso?",
+            "¿Qué anoto sobre tiempos de entrega?",
+          ],
+          system_prompt_chat: PROMPT_DEFAULT,
+        },
+        {
+          id: "toy-002",
+          nombre_local: "Concesionaria Toyota",
+          categoria: "Concesionarios de Autos",
+          codigo_acceso: "TOYOTA2024",
+          video_youtube_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+          perfil_evaluador:
+            "Profesional independiente de 35-50 años buscando una Hilux o Corolla Cross. Consideras opciones al contado o crédito vehicular bancario.",
+          focos: [
+            "Atención del asesor",
+            "Información de garantías",
+            "Opciones de financiamiento",
+            "Postventa y mantenimiento",
+          ],
+          alerta_identidad:
+            "Mantén tu rol de cliente en todo momento. Si insisten en datos personales, ofrece un correo genérico.",
+          preguntas_quiz: [
+            {
+              pregunta: "¿Qué vehículos te interesan según el perfil?",
+              opciones: ["Yaris y Etios", "Hilux y Corolla Cross", "Land Cruiser", "Solo híbridos"],
+              correcta: 1,
+              explicacion: "El perfil define interés en Hilux y Corolla Cross.",
+            },
+            {
+              pregunta: "¿Qué debes evaluar sobre el asesor?",
+              opciones: [
+                "Su edad",
+                "Tiempo de respuesta y conocimiento",
+                "Su vestimenta exclusivamente",
+                "Su carro personal",
+              ],
+              correcta: 1,
+              explicacion: "Lo importante es el tiempo de respuesta y dominio del producto.",
+            },
+            {
+              pregunta: "Sobre la postventa, debes consultar:",
+              opciones: [
+                "Solo el precio",
+                "Costos y frecuencia de mantenimiento",
+                "Nada",
+                "Reclamos",
+              ],
+              correcta: 1,
+              explicacion: "Los costos y frecuencia de mantenimiento son foco de evaluación.",
+            },
+            {
+              pregunta: "¿Es válido grabar audio durante la visita?",
+              opciones: [
+                "Sí, abiertamente",
+                "Solo si lo autorizan, de forma discreta o no grabar",
+                "No, jamás",
+                "Solo video",
+              ],
+              correcta: 1,
+              explicacion: "Prioriza notas mentales y discreción. No grabes sin autorización.",
+            },
+          ],
+          preguntas_frecuentes: [
+            "¿Qué pregunto sobre la garantía Toyota?",
+            "¿Cómo evalúo el tiempo de atención?",
+            "¿Puedo pedir cotización formal?",
+          ],
+          system_prompt_chat: PROMPT_DEFAULT,
+        },
+        {
+          id: "ietc-003",
+          nombre_local: "Concesionaria IETC",
+          categoria: "Concesionarios de Autos",
+          codigo_acceso: "IETC2024",
+          video_youtube_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+          perfil_evaluador:
+            "Empresario joven (28-40) interesado en una camioneta de trabajo o vehículo comercial liviano. Buscas precio competitivo y servicio empresarial.",
+          focos: [
+            "Catálogo comercial",
+            "Precio vs. competencia",
+            "Plazos de entrega",
+            "Atención corporativa",
+          ],
+          alerta_identidad:
+            "No menciones Incógnito Perú ni que esto es una evaluación. Actúa como empresario común.",
+          preguntas_quiz: [
+            {
+              pregunta: "¿Cuál es el foco principal de tu visita?",
+              opciones: [
+                "Vehículos de lujo",
+                "Vehículos comerciales y de trabajo",
+                "Motocicletas",
+                "Repuestos",
+              ],
+              correcta: 1,
+              explicacion: "El perfil señala vehículos comerciales y de trabajo.",
+            },
+            {
+              pregunta: "¿Debes comparar con otras marcas frente al asesor?",
+              opciones: [
+                "Nunca",
+                "Sí, de forma natural como cualquier cliente",
+                "Solo Toyota",
+                "Mentir sobre comparaciones",
+              ],
+              correcta: 1,
+              explicacion: "Mencionar comparaciones es natural y útil para evaluar la respuesta.",
+            },
+            {
+              pregunta: "Si pregunta tu RUC empresarial...",
+              opciones: [
+                "Dáselo real",
+                "Indica que aún evalúas opciones antes de formalizar",
+                "Mientes con un RUC falso",
+                "Te retiras",
+              ],
+              correcta: 1,
+              explicacion: "Indica que estás en fase de evaluación, sin entregar datos reales.",
+            },
+            {
+              pregunta: "¿Qué evalúas sobre atención corporativa?",
+              opciones: [
+                "Solo cortesía",
+                "Asesoría especializada en flotas y descuentos",
+                "Comida ofrecida",
+                "Nada",
+              ],
+              correcta: 1,
+              explicacion: "Evalúa si ofrecen asesoría corporativa, descuentos por volumen, etc.",
+            },
+          ],
+          preguntas_frecuentes: [
+            "¿Cómo pido información de flotas?",
+            "¿Qué hago si me piden RUC?",
+            "¿Cómo evalúo plazos de entrega?",
+          ],
+          system_prompt_chat: PROMPT_DEFAULT,
+        },
+        {
+          id: "rosa-004",
+          nombre_local: "Restaurante La Rosa Náutica",
+          categoria: "Restaurantes",
+          codigo_acceso: "ROSA2024",
+          video_youtube_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+          perfil_evaluador:
+            "Comensal adulto (30-55), profesional, que asiste a un almuerzo de negocios o cena especial. Conoces algo de gastronomía marina peruana.",
+          focos: [
+            "Tiempo de espera y bienvenida",
+            "Calidad del servicio",
+            "Sabor y presentación de los platos",
+            "Limpieza e infraestructura",
+          ],
+          alerta_identidad:
+            "No tomes fotos evidentes del personal. Pide cuenta con normalidad. No menciones evaluaciones.",
+          preguntas_quiz: [
+            {
+              pregunta: "¿Qué evalúas al ingresar al restaurante?",
+              opciones: [
+                "Solo el menú",
+                "Tiempo de bienvenida, asignación de mesa y cordialidad",
+                "La música",
+                "Los autos del estacionamiento",
+              ],
+              correcta: 1,
+              explicacion:
+                "La bienvenida y asignación de mesa son el primer punto de contacto crítico.",
+            },
+            {
+              pregunta: "Sobre los platos debes evaluar:",
+              opciones: [
+                "Solo el precio",
+                "Sabor, presentación, temperatura y tiempo",
+                "Solo la presentación",
+                "Solo la cantidad",
+              ],
+              correcta: 1,
+              explicacion: "Sabor, presentación, temperatura y tiempo de cocina son los 4 ejes.",
+            },
+            {
+              pregunta: "Si el mozo se demora mucho, ¿qué haces?",
+              opciones: [
+                "Reclamas fuerte",
+                "Anotas mentalmente el tiempo y mantienes la calma",
+                "Te retiras",
+                "Llamas al gerente molesto",
+              ],
+              correcta: 1,
+              explicacion: "Anota el tiempo y mantén un comportamiento de cliente promedio.",
+            },
+            {
+              pregunta: "¿Puedes pedir recomendaciones al mozo?",
+              opciones: ["No", "Sí, evalúa cómo recomienda", "Solo platos baratos", "Solo postres"],
+              correcta: 1,
+              explicacion: "Pedir recomendaciones es ideal para evaluar el conocimiento del mozo.",
+            },
+          ],
+          preguntas_frecuentes: [
+            "¿Qué pido para evaluar bien la cocina?",
+            "¿Cómo mido el tiempo de espera?",
+            "¿Qué hago si el plato llega frío?",
+          ],
+          system_prompt_chat: PROMPT_DEFAULT,
+        },
+        {
+          id: "uni-005",
+          nombre_local: "Tienda de Perfumes Unique",
+          categoria: "Tiendas y Servicios",
+          codigo_acceso: "UNIQUE2024",
+          video_youtube_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+          perfil_evaluador:
+            "Cliente interesado en un perfume como regalo (para pareja, familiar o uno mismo). Presupuesto medio, abierto a recomendaciones de la consultora.",
+          focos: [
+            "Asesoría de la consultora",
+            "Conocimiento del producto",
+            "Promociones vigentes",
+            "Proceso de pago",
+          ],
+          alerta_identidad:
+            "No reveles tu rol. Compórtate como cliente regular interesado en una compra real.",
+          preguntas_quiz: [
+            {
+              pregunta: "¿Qué debes pedir a la consultora?",
+              opciones: [
+                "Que adivine tu gusto",
+                "Recomendaciones según ocasión y perfil del regalo",
+                "Solo el más caro",
+                "Que te deje sola",
+              ],
+              correcta: 1,
+              explicacion: "Pide recomendaciones según ocasión para evaluar su asesoría.",
+            },
+            {
+              pregunta: "Sobre promociones, debes:",
+              opciones: [
+                "Ignorarlas",
+                "Preguntar activamente por descuentos o combos",
+                "Asumir que no hay",
+                "Mentir sobre cupones",
+              ],
+              correcta: 1,
+              explicacion: "Consulta activamente por promociones, es parte de la evaluación.",
+            },
+            {
+              pregunta: "¿Debes completar la compra?",
+              opciones: [
+                "Siempre",
+                "Solo si la misión lo indica; usualmente no es obligatorio",
+                "Nunca",
+                "Solo con efectivo",
+              ],
+              correcta: 1,
+              explicacion:
+                "Revisa las instrucciones de la misión. Usualmente no se requiere compra real.",
+            },
+            {
+              pregunta: "Si te ofrecen una muestra...",
+              opciones: [
+                "La rechazas",
+                "La aceptas y evalúas la oferta",
+                "Te retiras",
+                "Te molestas",
+              ],
+              correcta: 1,
+              explicacion: "Acepta muestras: forman parte de la experiencia ofrecida.",
+            },
+          ],
+          preguntas_frecuentes: [
+            "¿Cómo evalúo la asesoría?",
+            "¿Debo comprar algo?",
+            "¿Qué pregunto sobre promociones?",
+          ],
+          system_prompt_chat: PROMPT_DEFAULT,
+        },
+        {
+          id: "inka-006",
+          nombre_local: "Farmacia InkaFarma",
+          categoria: "Tiendas y Servicios",
+          codigo_acceso: "INKA2024",
+          video_youtube_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+          perfil_evaluador:
+            "Cliente con consulta sobre un medicamento de venta libre (analgésico, vitaminas o producto de cuidado personal). Buscas orientación del químico farmacéutico.",
+          focos: [
+            "Atención del químico farmacéutico",
+            "Tiempo de espera en caja",
+            "Disponibilidad de productos",
+            "Limpieza del local",
+          ],
+          alerta_identidad:
+            "No menciones la evaluación. Si te piden DNI para descuentos, indica que no tienes a la mano.",
+          preguntas_quiz: [
+            {
+              pregunta: "¿Qué evalúas del personal?",
+              opciones: [
+                "Su uniforme",
+                "Su asesoría profesional y trato",
+                "Su edad",
+                "Su tono de voz",
+              ],
+              correcta: 1,
+              explicacion: "Lo central es la asesoría profesional y el trato al cliente.",
+            },
+            {
+              pregunta: "Sobre tiempos de espera en caja:",
+              opciones: [
+                "No importa",
+                "Debes medirlo discretamente",
+                "Solo si hay cola",
+                "Reclamas si es lento",
+              ],
+              correcta: 1,
+              explicacion:
+                "Mide discretamente el tiempo desde que llegas a caja hasta que te atienden.",
+            },
+            {
+              pregunta: "Si no tienen el producto, evalúas:",
+              opciones: [
+                "Solo si lo dicen",
+                "Si ofrecen alternativa o pedido",
+                "Te retiras enojado",
+                "Reclamas",
+              ],
+              correcta: 1,
+              explicacion: "Evalúa si proponen alternativas o gestionan un pedido.",
+            },
+            {
+              pregunta: "¿Es válido pedir explicación del medicamento?",
+              opciones: [
+                "No",
+                "Sí, es clave para evaluar al químico",
+                "Solo si es caro",
+                "Solo recetados",
+              ],
+              correcta: 1,
+              explicacion: "Pedir explicación al químico es parte central de la evaluación.",
+            },
+          ],
+          preguntas_frecuentes: [
+            "¿Cómo evalúo al químico?",
+            "¿Qué pregunto sobre alternativas?",
+            "¿Cómo mido el tiempo de caja?",
+          ],
+          system_prompt_chat: PROMPT_DEFAULT,
+        },
+      ];
+
+      /* ---------- STATE ---------- */
+      let capacitaciones = [];
+      let vista = "evaluador"; // 'evaluador' | 'admin'
+      let adminTab = "lista"; // 'lista' | 'form'
+      let editingId = null;
+      let evalState = null; // { capId, paso (1-3), quizIdx, quizAnswers, chatMsgs }
+
+      /* ---------- STORAGE ---------- */
+      function loadData() {
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (raw) {
+            capacitaciones = JSON.parse(raw);
+          } else {
+            capacitaciones = JSON.parse(JSON.stringify(SEED));
+            saveData();
+          }
+        } catch (e) {
+          capacitaciones = JSON.parse(JSON.stringify(SEED));
+          saveData();
+        }
+      }
+      function saveData() {
+        localStorage.setItem(LS_KEY, JSON.stringify(capacitaciones));
+      }
+
+      /* ---------- UTILS ---------- */
+      const $ = (s, p = document) => p.querySelector(s);
+      const $$ = (s, p = document) => [...p.querySelectorAll(s)];
+      function escapeHtml(s) {
+        return (s ?? "")
+          .toString()
+          .replace(
+            /[&<>"']/g,
+            (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+          );
+      }
+      function toast(msg) {
+        const t = $("#toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 2200);
+      }
+      function uid() {
+        return "cap-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      }
+
+      /* ---------- ROUTER ---------- */
+      function setVista(v) {
+        vista = v;
+        $("#vistaTag").textContent = v === "admin" ? "Administración" : "Evaluador";
+        render();
+      }
+
+      function render() {
+        const app = $("#app");
+        if (vista === "admin") {
+          app.innerHTML = renderAdmin();
+          bindAdmin();
+        } else {
+          renderEvaluador();
+        }
+      }
+
+      /* ============================================================
+   ADMIN
+   ============================================================ */
+      function renderAdmin() {
+        return `
+    <h1 class="h1">Panel de Administración</h1>
+    <p class="subtitle">Gestiona las capacitaciones de los evaluadores.</p>
+    <div class="tabs">
+      <button class="tab ${adminTab === "lista" ? "active" : ""}" data-tab="lista">Capacitaciones</button>
+      <button class="tab ${adminTab === "form" ? "active" : ""}" data-tab="form">${editingId ? "Editar" : "Nueva"} capacitación</button>
+    </div>
+    <div style="margin-bottom:1rem">
+      <button class="btn btn-secondary" id="exitAdmin">← Salir del panel</button>
+    </div>
+    ${adminTab === "lista" ? renderListaTab() : renderFormTab()}
+  `;
+      }
+
+      function renderListaTab() {
+        const rows =
+          capacitaciones.length === 0
+            ? `<tr><td colspan="4" style="text-align:center;color:var(--gris-medio);padding:2rem">No hay capacitaciones aún.</td></tr>`
+            : capacitaciones
+                .map(
+                  (c) => `
+        <tr>
+          <td>${escapeHtml(c.nombre_local)}</td>
+          <td><span class="badge">${escapeHtml(c.categoria)}</span></td>
+          <td><code>${escapeHtml(c.codigo_acceso)}</code></td>
+          <td><div class="row-actions">
+            <button class="btn-link" data-edit="${c.id}">Editar</button>
+            <button class="btn-link" data-del="${c.id}" style="color:#c00">Eliminar</button>
+          </div></td>
+        </tr>`,
+                )
+                .join("");
+        return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;gap:.5rem;flex-wrap:wrap">
+      <strong>${capacitaciones.length} capacitaciones</strong>
+      <button class="btn btn-primary" id="newCap">+ Nueva capacitación</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nombre del local</th><th>Categoría</th><th>Código</th><th>Acciones</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+      }
+
+      function getEditingObj() {
+        if (editingId) {
+          return JSON.parse(JSON.stringify(capacitaciones.find((c) => c.id === editingId)));
+        }
+        return {
+          id: "",
+          nombre_local: "",
+          categoria: "Concesionarios de Autos",
+          codigo_acceso: "",
+          video_youtube_url: "",
+          perfil_evaluador: "",
+          focos: [""],
+          alerta_identidad: "",
+          preguntas_quiz: [
+            { pregunta: "", opciones: ["", "", "", ""], correcta: 0, explicacion: "" },
+          ],
+          preguntas_frecuentes: [""],
+          system_prompt_chat: PROMPT_DEFAULT,
+        };
+      }
+      let formData = null;
+
+      function renderFormTab() {
+        if (!formData) formData = getEditingObj();
+        const d = formData;
+        const focosHtml = d.focos
+          .map(
+            (f, i) => `
+    <div class="dyn-item">
+      <input type="text" data-foco="${i}" value="${escapeHtml(f)}" placeholder="Ej. Tiempos de entrega" />
+      <button class="icon-btn" data-foco-del="${i}" title="Eliminar">×</button>
+    </div>`,
+          )
+          .join("");
+        const faqHtml = d.preguntas_frecuentes
+          .map(
+            (q, i) => `
+    <div class="dyn-item">
+      <input type="text" data-faq="${i}" value="${escapeHtml(q)}" placeholder="Pregunta frecuente" />
+      <button class="icon-btn" data-faq-del="${i}" title="Eliminar">×</button>
+    </div>`,
+          )
+          .join("");
+        const quizHtml = d.preguntas_quiz
+          .map(
+            (q, i) => `
+    <div class="quiz-edit">
+      <div class="q-head">
+        <strong>Pregunta ${i + 1}</strong>
+        <button class="icon-btn" data-q-del="${i}" title="Eliminar pregunta">×</button>
+      </div>
+      <div class="form-group">
+        <input type="text" data-q-text="${i}" value="${escapeHtml(q.pregunta)}" placeholder="Texto de la pregunta" />
+      </div>
+      ${[0, 1, 2, 3]
+        .map(
+          (oi) => `
+        <div class="opt-row">
+          <input type="radio" name="correcta-${i}" data-q-correcta="${i}" value="${oi}" ${q.correcta === oi ? "checked" : ""} />
+          <input type="text" data-q-opt="${i}-${oi}" value="${escapeHtml(q.opciones[oi] || "")}" placeholder="Opción ${oi + 1}" />
+        </div>`,
+        )
+        .join("")}
+      <div class="form-group" style="margin-top:.6rem;margin-bottom:0">
+        <textarea data-q-exp="${i}" placeholder="Explicación de la respuesta correcta">${escapeHtml(q.explicacion)}</textarea>
+      </div>
+    </div>`,
+          )
+          .join("");
+
+        return `
+    <form id="capForm" onsubmit="return false">
+      <div class="form-group">
+        <label>Nombre del local</label>
+        <input type="text" id="f_nombre" value="${escapeHtml(d.nombre_local)}" required />
+      </div>
+      <div class="form-group">
+        <label>Categoría</label>
+        <select id="f_categoria">
+          ${CATEGORIAS.map((c) => `<option value="${c}" ${c === d.categoria ? "selected" : ""}>${c}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Código de acceso</label>
+        <input type="text" id="f_codigo" value="${escapeHtml(d.codigo_acceso)}" style="text-transform:uppercase" required />
+        <div class="hint">Se convierte a mayúsculas automáticamente.</div>
+      </div>
+      <div class="form-group">
+        <label>URL del video de YouTube (embed)</label>
+        <input type="text" id="f_video" value="${escapeHtml(d.video_youtube_url)}" placeholder="https://www.youtube.com/embed/..." />
+      </div>
+      <div class="form-group">
+        <label>Perfil del evaluador</label>
+        <textarea id="f_perfil">${escapeHtml(d.perfil_evaluador)}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Focos de evaluación</label>
+        <div id="focosList">${focosHtml}</div>
+        <button class="icon-btn add" id="addFoco" style="margin-top:.3rem">+ Agregar foco</button>
+      </div>
+
+      <div class="form-group">
+        <label>Alerta de identidad</label>
+        <textarea id="f_alerta">${escapeHtml(d.alerta_identidad)}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Preguntas del quiz (máx. 6)</label>
+        <div id="quizList">${quizHtml}</div>
+        <button class="icon-btn add" id="addQuiz" style="margin-top:.3rem">+ Agregar pregunta</button>
+      </div>
+
+      <div class="form-group">
+        <label>Preguntas frecuentes para el chat (máx. 5)</label>
+        <div id="faqList">${faqHtml}</div>
+        <button class="icon-btn add" id="addFaq" style="margin-top:.3rem">+ Agregar pregunta</button>
+      </div>
+
+      <div class="form-group">
+        <label>System prompt del chat IA</label>
+        <textarea id="f_prompt" rows="5">${escapeHtml(d.system_prompt_chat)}</textarea>
+        <div class="hint">Placeholders: [nombre_local], [perfil_evaluador], [focos]</div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="saveCap">Guardar capacitación</button>
+        <button class="btn btn-secondary" id="cancelCap">Cancelar</button>
+      </div>
+    </form>
+  `;
+      }
+
+      function bindAdmin() {
+        $$(".tab").forEach(
+          (t) =>
+            (t.onclick = () => {
+              adminTab = t.dataset.tab;
+              if (adminTab === "form" && !editingId) formData = getEditingObj();
+              render();
+            }),
+        );
+        const exit = $("#exitAdmin");
+        if (exit)
+          exit.onclick = () => {
+            editingId = null;
+            formData = null;
+            adminTab = "lista";
+            setVista("evaluador");
+          };
+
+        if (adminTab === "lista") {
+          const nb = $("#newCap");
+          if (nb)
+            nb.onclick = () => {
+              editingId = null;
+              formData = getEditingObj();
+              adminTab = "form";
+              render();
+            };
+          $$("[data-edit]").forEach(
+            (b) =>
+              (b.onclick = () => {
+                editingId = b.dataset.edit;
+                formData = getEditingObj();
+                adminTab = "form";
+                render();
+              }),
+          );
+          $$("[data-del]").forEach(
+            (b) =>
+              (b.onclick = () => {
+                if (confirm("¿Eliminar esta capacitación?")) {
+                  capacitaciones = capacitaciones.filter((c) => c.id !== b.dataset.del);
+                  saveData();
+                  toast("✓ Capacitación eliminada");
+                  render();
+                }
+              }),
+          );
+        } else {
+          bindFormDynamics();
+          $("#saveCap").onclick = saveCap;
+          $("#cancelCap").onclick = () => {
+            editingId = null;
+            formData = null;
+            adminTab = "lista";
+            render();
+          };
+          $("#f_codigo").addEventListener("input", (e) => {
+            e.target.value = e.target.value.toUpperCase();
+          });
+        }
+      }
+
+      function bindFormDynamics() {
+        $("#addFoco").onclick = () => {
+          syncForm();
+          formData.focos.push("");
+          rerenderForm();
+        };
+        $$("[data-foco-del]").forEach(
+          (b) =>
+            (b.onclick = () => {
+              syncForm();
+              formData.focos.splice(+b.dataset.focoDel, 1);
+              if (!formData.focos.length) formData.focos = [""];
+              rerenderForm();
+            }),
+        );
+
+        $("#addFaq").onclick = () => {
+          syncForm();
+          if (formData.preguntas_frecuentes.length < 5) {
+            formData.preguntas_frecuentes.push("");
+            rerenderForm();
+          } else toast("Máximo 5 preguntas frecuentes");
+        };
+        $$("[data-faq-del]").forEach(
+          (b) =>
+            (b.onclick = () => {
+              syncForm();
+              formData.preguntas_frecuentes.splice(+b.dataset.faqDel, 1);
+              if (!formData.preguntas_frecuentes.length) formData.preguntas_frecuentes = [""];
+              rerenderForm();
+            }),
+        );
+
+        $("#addQuiz").onclick = () => {
+          syncForm();
+          if (formData.preguntas_quiz.length < 6) {
+            formData.preguntas_quiz.push({
+              pregunta: "",
+              opciones: ["", "", "", ""],
+              correcta: 0,
+              explicacion: "",
+            });
+            rerenderForm();
+          } else toast("Máximo 6 preguntas");
+        };
+        $$("[data-q-del]").forEach(
+          (b) =>
+            (b.onclick = () => {
+              syncForm();
+              formData.preguntas_quiz.splice(+b.dataset.qDel, 1);
+              if (!formData.preguntas_quiz.length)
+                formData.preguntas_quiz = [
+                  { pregunta: "", opciones: ["", "", "", ""], correcta: 0, explicacion: "" },
+                ];
+              rerenderForm();
+            }),
+        );
+      }
+
+      function syncForm() {
+        formData.nombre_local = $("#f_nombre").value.trim();
+        formData.categoria = $("#f_categoria").value;
+        formData.codigo_acceso = $("#f_codigo").value.trim().toUpperCase();
+        formData.video_youtube_url = $("#f_video").value.trim();
+        formData.perfil_evaluador = $("#f_perfil").value.trim();
+        formData.alerta_identidad = $("#f_alerta").value.trim();
+        formData.system_prompt_chat = $("#f_prompt").value.trim() || PROMPT_DEFAULT;
+        formData.focos = $$("[data-foco]").map((i) => i.value.trim());
+        formData.preguntas_frecuentes = $$("[data-faq]").map((i) => i.value.trim());
+        formData.preguntas_quiz = formData.preguntas_quiz.map((_, i) => {
+          const pregunta = $(`[data-q-text="${i}"]`)?.value.trim() || "";
+          const opciones = [0, 1, 2, 3].map(
+            (oi) => $(`[data-q-opt="${i}-${oi}"]`)?.value.trim() || "",
+          );
+          const correctaEl = $(`[data-q-correcta="${i}"]:checked`);
+          const correcta = correctaEl ? +correctaEl.value : 0;
+          const explicacion = $(`[data-q-exp="${i}"]`)?.value.trim() || "";
+          return { pregunta, opciones, correcta, explicacion };
+        });
+      }
+      function rerenderForm() {
+        render();
+      }
+
+      function saveCap() {
+        syncForm();
+        if (!formData.nombre_local || !formData.codigo_acceso) {
+          toast("Nombre y código son obligatorios");
+          return;
+        }
+        formData.focos = formData.focos.filter((f) => f);
+        formData.preguntas_frecuentes = formData.preguntas_frecuentes.filter((f) => f);
+        formData.preguntas_quiz = formData.preguntas_quiz.filter((q) => q.pregunta);
+        if (editingId) {
+          const idx = capacitaciones.findIndex((c) => c.id === editingId);
+          formData.id = editingId;
+          capacitaciones[idx] = formData;
+        } else {
+          formData.id = uid();
+          capacitaciones.push(formData);
+        }
+        saveData();
+        editingId = null;
+        formData = null;
+        adminTab = "lista";
+        render();
+        toast("✓ Capacitación guardada");
+      }
+
+      /* ============================================================
+   EVALUADOR
+   ============================================================ */
+      function renderEvaluador() {
+        const app = $("#app");
+        if (!evalState) {
+          app.innerHTML = renderInicio();
+          bindInicio();
+          return;
+        }
+        const cap = capacitaciones.find((c) => c.id === evalState.capId);
+        if (!cap) {
+          evalState = null;
+          return renderEvaluador();
+        }
+        app.innerHTML = renderCapacitacion(cap);
+        bindCapacitacion(cap);
+      }
+
+      function renderInicio() {
+        const grupos = {};
+        capacitaciones.forEach((c) => {
+          (grupos[c.categoria] ||= []).push(c);
+        });
+        const orden = ["Concesionarios de Autos", "Restaurantes", "Tiendas y Servicios", "Otro"];
+        const cats = orden
+          .filter((c) => grupos[c])
+          .map(
+            (cat) => `
+    <div class="cat-section">
+      <div class="cat-title">${CAT_ICONS[cat] || "📋"} ${escapeHtml(cat)}</div>
+      <div class="cards">
+        ${grupos[cat]
+          .map(
+            (c) => `
+          <div class="card" data-focus>
+            <div class="card-nombre">${escapeHtml(c.nombre_local)}</div>
+            <div class="card-foot">
+              <span class="badge">${escapeHtml(c.categoria)}</span>
+              <span class="lock">🔒</span>
+            </div>
+          </div>`,
+          )
+          .join("")}
+      </div>
+    </div>`,
+          )
+          .join("");
+
+        return `
+    <h1 class="h1">Selecciona tu misión</h1>
+    <p class="subtitle">Ingresa el código que recibiste para acceder a tu capacitación.</p>
+    <div class="acceso-box">
+      <label style="font-weight:600;font-size:.9rem">Código de acceso</label>
+      <div class="row">
+        <input type="text" id="codigoInput" placeholder="Código de misión" autocomplete="off" />
+        <button class="btn btn-primary" id="entrarBtn">Ingresar</button>
+      </div>
+      <div class="err" id="codErr">Código no encontrado. Verifica con tu operador.</div>
+    </div>
+    <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:.5rem">Capacitaciones disponibles</h2>
+    ${cats || '<p class="subtitle">No hay capacitaciones disponibles aún.</p>'}
+  `;
+      }
+
+      function bindInicio() {
+        const inp = $("#codigoInput");
+        inp.addEventListener("input", (e) => {
+          e.target.value = e.target.value.toUpperCase();
+          $("#codErr").classList.remove("show");
+        });
+        $("#entrarBtn").onclick = () => {
+          const code = (inp.value || "").trim().toUpperCase();
+          const cap = capacitaciones.find((c) => c.codigo_acceso.toUpperCase() === code);
+          if (!cap) {
+            $("#codErr").classList.add("show");
+            return;
+          }
+          evalState = { capId: cap.id, paso: 1, quizIdx: 0, quizAnswers: [], chatMsgs: [] };
+          renderEvaluador();
+          window.scrollTo({ top: 0 });
+        };
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") $("#entrarBtn").click();
+        });
+        $$("[data-focus]").forEach(
+          (c) =>
+            (c.onclick = () => {
+              inp.focus();
+              inp.scrollIntoView({ behavior: "smooth", block: "center" });
+            }),
+        );
+      }
+
+      function renderCapacitacion(cap) {
+        const p = evalState.paso;
+        const stepCls = (i) => (i < p ? "step done" : i === p ? "step active" : "step");
+        return `
+    <div class="progress">
+      <div class="${stepCls(1)}">${p > 1 ? "✓ " : ""}1 · Briefing</div>
+      <div class="${stepCls(2)}">${p > 2 ? "✓ " : ""}2 · Quiz</div>
+      <div class="${stepCls(3)}">3 · Chat</div>
+    </div>
+    ${p === 1 ? renderBriefing(cap) : p === 2 ? renderQuiz(cap) : renderChat(cap)}
+  `;
+      }
+
+      function bindCapacitacion(cap) {
+        if (evalState.paso === 1) bindBriefing(cap);
+        else if (evalState.paso === 2) bindQuiz(cap);
+        else bindChat(cap);
+      }
+
+      /* --- PASO 1 BRIEFING --- */
+      function renderBriefing(cap) {
+        const vid = cap.video_youtube_url
+          ? `<iframe src="${escapeHtml(cap.video_youtube_url)}" allowfullscreen></iframe>`
+          : `<div class="ph">Video no disponible</div>`;
+        return `
+    <h2 class="h1" style="font-size:1.4rem">${escapeHtml(cap.nombre_local)}</h2>
+    <p class="subtitle">Capacitación de misión</p>
+    <div class="video-wrap">${vid}</div>
+    <div class="info-card">
+      <h3>Perfil del evaluador</h3>
+      <p>${escapeHtml(cap.perfil_evaluador)}</p>
+    </div>
+    <div class="info-card">
+      <h3>Focos de evaluación</h3>
+      <ul>${cap.focos.map((f) => `<li>${escapeHtml(f)}</li>`).join("")}</ul>
+    </div>
+    <div class="info-card alerta">
+      <h3>⚠️ Alerta de identidad</h3>
+      <p>${escapeHtml(cap.alerta_identidad)}</p>
+    </div>
+    <div style="margin:1.5rem 0;text-align:center">
+      <button class="btn btn-primary" id="goQuiz" disabled>Entendido, ir al Quiz →</button>
+      <div class="hint" id="scrollHint" style="font-size:.78rem;color:var(--gris-medio);margin-top:.5rem">Desliza hasta el final para continuar</div>
+    </div>
+  `;
+      }
+      function bindBriefing(cap) {
+        const btn = $("#goQuiz");
+        const obs = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                btn.disabled = false;
+                $("#scrollHint").textContent = "Listo para continuar";
+                obs.disconnect();
+              }
+            });
+          },
+          { threshold: 0.5 },
+        );
+        obs.observe(btn);
+        btn.onclick = () => {
+          evalState.paso = 2;
+          evalState.quizIdx = 0;
+          evalState.quizAnswers = [];
+          renderEvaluador();
+          window.scrollTo({ top: 0 });
+        };
+      }
+
+      /* --- PASO 2 QUIZ --- */
+      function renderQuiz(cap) {
+        const i = evalState.quizIdx;
+        if (i >= cap.preguntas_quiz.length) {
+          const correct = evalState.quizAnswers.filter((a) => a.ok).length;
+          const total = cap.preguntas_quiz.length;
+          const pass = correct === total;
+          return `
+      <div class="result-card">
+        <div style="font-size:.9rem;color:var(--gris-medio)">Resultado del quiz</div>
+        <div class="score">${correct} de ${total} 🎯</div>
+        <p>${pass ? "¡Excelente! Dominas el briefing." : "Repasa los puntos clave antes de tu visita."}</p>
+        <div style="margin-top:1.5rem">
+          <button class="btn btn-primary" id="goChat">Ir al Chat →</button>
+        </div>
+      </div>
+    `;
+        }
+        const q = cap.preguntas_quiz[i];
+        const answered = evalState.quizAnswers[i];
+        return `
+    <h2 class="h1" style="font-size:1.3rem">Verifica tu comprensión</h2>
+    <p class="subtitle">Pregunta ${i + 1} de ${cap.preguntas_quiz.length}</p>
+    <div class="quiz-q">
+      <h3>${escapeHtml(q.pregunta)}</h3>
+      ${q.opciones
+        .map((op, oi) => {
+          let cls = "quiz-opt";
+          if (answered) {
+            if (oi === q.correcta) cls += " correct";
+            else if (oi === answered.choice) cls += " wrong";
+          }
+          return `<button class="${cls}" data-opt="${oi}" ${answered ? "disabled" : ""}>${escapeHtml(op)}</button>`;
+        })
+        .join("")}
+      ${
+        answered
+          ? `
+        <div class="feedback ${answered.ok ? "ok" : "bad"}">
+          ${answered.ok ? "✓ Correcto. " : "✗ Respuesta correcta: <strong>" + escapeHtml(q.opciones[q.correcta]) + "</strong>. "}
+          ${escapeHtml(q.explicacion)}
+        </div>
+        <div style="margin-top:1rem;text-align:right">
+          <button class="btn btn-primary" id="nextQ">Siguiente pregunta →</button>
+        </div>`
+          : ""
+      }
+    </div>
+  `;
+      }
+      function bindQuiz(cap) {
+        const i = evalState.quizIdx;
+        if (i >= cap.preguntas_quiz.length) {
+          $("#goChat").onclick = () => {
+            evalState.paso = 3;
+            renderEvaluador();
+            window.scrollTo({ top: 0 });
+          };
+          return;
+        }
+        const q = cap.preguntas_quiz[i];
+        $$("[data-opt]").forEach(
+          (b) =>
+            (b.onclick = () => {
+              const choice = +b.dataset.opt;
+              evalState.quizAnswers[i] = { choice, ok: choice === q.correcta };
+              renderEvaluador();
+            }),
+        );
+        const nq = $("#nextQ");
+        if (nq)
+          nq.onclick = () => {
+            evalState.quizIdx++;
+            renderEvaluador();
+            window.scrollTo({ top: 0 });
+          };
+      }
+
+      /* --- PASO 3 CHAT --- */
+      function renderChat(cap) {
+        return `
+    <h2 class="h1" style="font-size:1.3rem">¿Tienes dudas antes de entrar?</h2>
+    <p class="subtitle">Conversación con tu asistente de misión</p>
+    <div class="chat-wrap">
+      <div class="faq-row" id="faqRow">
+        ${cap.preguntas_frecuentes.map((q) => `<button class="faq-btn" data-faq="${escapeHtml(q)}">${escapeHtml(q)}</button>`).join("")}
+      </div>
+      <div class="msgs" id="msgs">
+        ${evalState.chatMsgs.length === 0 ? `<div class="msg bot">Hola, soy tu asistente para la misión en <strong>${escapeHtml(cap.nombre_local)}</strong>. Pregúntame cualquier duda operativa antes de entrar.</div>` : ""}
+        ${evalState.chatMsgs.map((m) => `<div class="msg ${m.role === "user" ? "user" : "bot"}">${escapeHtml(m.content)}</div>`).join("")}
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Escribe tu pregunta..." />
+        <button class="send-btn" id="sendBtn">➤</button>
+      </div>
+    </div>
+    <div style="margin-top:1.2rem;text-align:center">
+      <button class="btn btn-secondary" id="endSession">Finalizar y cerrar sesión</button>
+    </div>
+  `;
+      }
+
+      function bindChat(cap) {
+        const input = $("#chatInput");
+        const send = $("#sendBtn");
+        const msgs = $("#msgs");
+        msgs.scrollTop = msgs.scrollHeight;
+
+        $$("[data-faq]").forEach(
+          (b) =>
+            (b.onclick = () => {
+              input.value = b.dataset.faq;
+              sendMsg();
+            }),
+        );
+        send.onclick = sendMsg;
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") sendMsg();
+        });
+        $("#endSession").onclick = () => {
+          evalState = null;
+          renderEvaluador();
+          window.scrollTo({ top: 0 });
+        };
+
+        async function sendMsg() {
+          const text = input.value.trim();
+          if (!text) return;
+          input.value = "";
+          input.disabled = true;
+          send.disabled = true;
+          evalState.chatMsgs.push({ role: "user", content: text });
+          appendMsg("user", text);
+          const typing = appendTyping();
+
+          try {
+            const reply = await callClaude(cap, evalState.chatMsgs);
+            typing.remove();
+            evalState.chatMsgs.push({ role: "assistant", content: reply });
+            appendMsg("bot", reply);
+          } catch (e) {
+            typing.remove();
+            const err = "No pude responder en este momento. " + (e.message || "");
+            appendMsg("bot", err);
+          } finally {
+            input.disabled = false;
+            send.disabled = false;
+            input.focus();
+          }
+        }
+
+        function appendMsg(kind, text) {
+          const d = document.createElement("div");
+          d.className = "msg " + (kind === "user" ? "user" : "bot");
+          d.textContent = text;
+          msgs.appendChild(d);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+        function appendTyping() {
+          const d = document.createElement("div");
+          d.className = "msg bot";
+          d.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+          msgs.appendChild(d);
+          msgs.scrollTop = msgs.scrollHeight;
+          return d;
+        }
+      }
+
+      async function callClaude(cap, history) {
+        const sysPrompt = cap.system_prompt_chat
+          .replaceAll("[nombre_local]", cap.nombre_local)
+          .replaceAll("[perfil_evaluador]", cap.perfil_evaluador)
+          .replaceAll("[focos]", cap.focos.join(", "));
+
+        const res = await fetch(CHAT_ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + CHAT_ANON_KEY,
+            apikey: CHAT_ANON_KEY,
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-5",
+            max_tokens: 600,
+            system: sysPrompt,
+            messages: history.map((m) => ({ role: m.role, content: m.content })),
+          }),
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error("API " + res.status + ": " + t.slice(0, 200));
+        }
+        const data = await res.json();
+        return data.text || "(Sin respuesta)";
+      }
+
+      /* ============================================================
+   INIT / ADMIN MODAL
+   ============================================================ */
+      function initAdminModal() {
+        const modal = $("#adminModal");
+        const pass = $("#adminPass");
+        const err = $("#adminErr");
+        $("#adminTrigger").onclick = () => {
+          pass.value = "";
+          err.classList.remove("show");
+          modal.classList.add("show");
+          setTimeout(() => pass.focus(), 50);
+        };
+        $("#adminCancel").onclick = () => modal.classList.remove("show");
+        $("#adminOk").onclick = tryAdmin;
+        pass.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") tryAdmin();
+        });
+        function tryAdmin() {
+          if (pass.value === ADMIN_PASSWORD) {
+            modal.classList.remove("show");
+            editingId = null;
+            formData = null;
+            adminTab = "lista";
+            setVista("admin");
+          } else {
+            err.classList.add("show");
+          }
+        }
+      }
+
+      loadData();
+      initAdminModal();
+      render();
+    </script>
+  </body>
+</html>
