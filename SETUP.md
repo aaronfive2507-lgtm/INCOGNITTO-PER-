@@ -4,12 +4,12 @@ Este proyecto (Vite + TanStack Start + Supabase) ya tiene todo el código listo.
 
 ## 1. Aplicar el esquema de base de datos
 
-1. Entra al dashboard de tu proyecto Supabase (`xmzimdjiwrzxdczpnlxw`) → **SQL Editor**.
+1. Entra al dashboard de tu proyecto Supabase (`crgbihaefbudqfosddwa`) → **SQL Editor**.
 2. Pega y ejecuta el contenido de [`supabase/migrations/20260715000000_incognitto_schema.sql`](supabase/migrations/20260715000000_incognitto_schema.sql).
 3. Verifica que se crearon las tablas `asignaciones_mision`, `quiz_resultados`, `chat_preguntas` y las funciones `buscar_misiones_por_celular` / `registrar_resultado_quiz`.
 4. (Opcional pero recomendado) Si más adelante instalas el Supabase CLI y conectas este proyecto, corre:
    ```bash
-   supabase gen types typescript --project-id xmzimdjiwrzxdczpnlxw > src/integrations/supabase/types.ts
+   supabase gen types typescript --project-id crgbihaefbudqfosddwa > src/integrations/supabase/types.ts
    ```
    para reemplazar la versión escrita a mano en `src/integrations/supabase/types.ts` por la generada automáticamente.
 
