@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 .output
+.vercel
 .vinxi
 .tanstack/**
 .nitro
@@ -21,6 +22,9 @@ public/.claude/settings.local.json
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
+
+# Supabase CLI local state
+supabase/.temp/
 
 # Editor directories and files
 .vscode/*

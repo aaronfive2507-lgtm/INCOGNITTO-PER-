@@ -58,15 +58,16 @@ No se crean automáticamente. Ve a Supabase → **Authentication → Users → A
 
 ## 6. Variables de entorno necesarias en Vercel
 
-| Variable                        | Dónde se usa                                                                                    | Ya existe                       |
-| ------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------- |
-| `VITE_SUPABASE_URL`             | Cliente (browser)                                                                               | Sí (`.env`)                     |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Cliente (browser)                                                                               | Sí (`.env`)                     |
-| `SUPABASE_URL`                  | SSR / server functions                                                                          | Sí (`.env`)                     |
-| `SUPABASE_PUBLISHABLE_KEY`      | SSR / server functions                                                                          | Sí (`.env`)                     |
-| `SUPABASE_SERVICE_ROLE_KEY`     | `src/integrations/supabase/client.server.ts` (no usado por este flujo, pero ya estaba previsto) | Confirmar en Vercel             |
-| `RESEND_API_KEY`                | `src/lib/contact.server.ts`                                                                     | **Falta agregar**               |
-| `ANTHROPIC_API_KEY`             | Secreto de la función edge `anthropic-chat` (Supabase, no Vercel)                               | Confirmar que sigue configurado |
+`src/integrations/supabase/client.server.ts` (que necesitaría `SUPABASE_SERVICE_ROLE_KEY`) no está en uso por ningún flujo actual — se puede omitir hasta que se implemente algo que realmente lo necesite.
+
+| Variable                        | Dónde se usa                                                       | Ya existe                       |
+| -------------------------------- | ------------------------------------------------------------------- | -------------------------------- |
+| `VITE_SUPABASE_URL`             | Cliente (browser)                                                  | Sí (`.env`)                     |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Cliente (browser)                                                  | Sí (`.env`)                     |
+| `SUPABASE_URL`                  | SSR / server functions                                             | Sí (`.env`)                     |
+| `SUPABASE_PUBLISHABLE_KEY`      | SSR / server functions                                             | Sí (`.env`)                     |
+| `RESEND_API_KEY`                | `src/lib/contact.server.ts`                                        | **Falta agregar**               |
+| `ANTHROPIC_API_KEY`             | Secreto de la función edge `anthropic-chat` (Supabase, no Vercel)  | Confirmar que sigue configurado |
 
 ## 7. Desplegar en Vercel
 

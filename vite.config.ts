@@ -12,4 +12,9 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Outside the Lovable sandbox (e.g. deploying straight to Vercel), nitro is off by
+  // default and the build has no server — that's what caused the 404 on Vercel.
+  // Force it on and hard-pin the Vercel preset so `npm run build` emits the
+  // .vercel/output Build Output API structure Vercel expects.
+  nitro: { preset: "vercel" },
 });
