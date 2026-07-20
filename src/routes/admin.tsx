@@ -51,7 +51,18 @@ function LoginScreen() {
       password,
     });
     setLoading(false);
-    if (error) setError("Credenciales inválidas o usuario no registrado.");
+    if (error) {
+      console.error("[admin login] Supabase auth error:", error.status, error.message, error);
+      if (error.message.toLowerCase().includes("invalid api key")) {
+        setError(
+          "Error de configuración: la conexión a Supabase no es válida (VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY). Revisa las variables de entorno del despliegue.",
+        );
+      } else if (error.message.toLowerCase().includes("invalid login credentials")) {
+        setError("Correo o contraseña incorrectos.");
+      } else {
+        setError(error.message);
+      }
+    }
   };
 
   return (
