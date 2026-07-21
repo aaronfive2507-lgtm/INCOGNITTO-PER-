@@ -62,15 +62,15 @@ Sin `RESEND_API_KEY`, el formulario muestra un error claro en vez de fallar sile
 ## 6. Variables de entorno necesarias en Vercel
 
 | Variable                        | Dónde se usa                                                      | Ya existe                       |
-| ------------------------------- | ------------------------------------------------------------------- | -------------------------------- |
-| `VITE_SUPABASE_URL`             | Cliente (browser)                                                  | Sí (`.env`)                     |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Cliente (browser)                                                  | Sí (`.env`)                     |
-| `SUPABASE_URL`                  | SSR / server functions                                             | Sí (`.env`)                     |
-| `SUPABASE_PUBLISHABLE_KEY`      | SSR / server functions                                             | Sí (`.env`)                     |
-| `SUPABASE_SERVICE_ROLE_KEY`     | `src/lib/admin.server.ts` (panel de administración)                | **Falta agregar**               |
-| `ADMIN_PASSWORD`                | `src/lib/admin.server.ts` (login del panel de administración)      | **Falta agregar**               |
-| `RESEND_API_KEY`                | `src/lib/contact.server.ts`                                        | **Falta agregar**               |
-| `ANTHROPIC_API_KEY`             | Secreto de la función edge `anthropic-chat` (Supabase, no Vercel)  | Confirmar que sigue configurado |
+| ------------------------------- | ----------------------------------------------------------------- | ------------------------------- |
+| `VITE_SUPABASE_URL`             | Cliente (browser)                                                 | Sí (`.env`)                     |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Cliente (browser)                                                 | Sí (`.env`)                     |
+| `SUPABASE_URL`                  | SSR / server functions                                            | Sí (`.env`)                     |
+| `SUPABASE_PUBLISHABLE_KEY`      | SSR / server functions                                            | Sí (`.env`)                     |
+| `SUPABASE_SERVICE_ROLE_KEY`     | `src/lib/admin.server.ts` (panel de administración)               | **Falta agregar**               |
+| `ADMIN_PASSWORD`                | `src/lib/admin.server.ts` (login del panel de administración)     | **Falta agregar**               |
+| `RESEND_API_KEY`                | `src/lib/contact.server.ts`                                       | **Falta agregar**               |
+| `ANTHROPIC_API_KEY`             | Secreto de la función edge `anthropic-chat` (Supabase, no Vercel) | Confirmar que sigue configurado |
 
 ## 7. Desplegar en Vercel
 

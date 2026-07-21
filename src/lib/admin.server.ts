@@ -21,36 +21,10 @@ export const adminLogin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// TEMPORARY DIAGNOSTIC — remove once the "JWT issued at future" issue is confirmed fixed.
-// Decodes the service role key's JWT payload (no signature/secret exposed) and compares
-// its `iat` against the server's own clock, since that mismatch is exactly what the error means.
-function logServiceKeyDiagnostics() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-  console.info("[admin debug] SUPABASE_SERVICE_ROLE_KEY length:", key.length);
-  console.info("[admin debug] first 10 / last 10 chars:", key.slice(0, 10), key.slice(-10));
-  const parts = key.split(".");
-  console.info("[admin debug] JWT segment count (should be 3):", parts.length);
-  if (parts.length === 3) {
-    try {
-      const payloadB64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-      const json = Buffer.from(payloadB64, "base64").toString("utf8");
-      const claims = JSON.parse(json);
-      console.info("[admin debug] decoded claims:", claims);
-      if (typeof claims.iat === "number") {
-        console.info("[admin debug] iat as date:", new Date(claims.iat * 1000).toISOString());
-      }
-    } catch (e) {
-      console.info("[admin debug] failed to decode JWT payload:", e);
-    }
-  }
-  console.info("[admin debug] server time now:", new Date().toISOString());
-}
-
 export const fetchAdminData = createServerFn({ method: "POST" })
   .validator((data: unknown) => passwordSchema.parse(data))
   .handler(async ({ data }) => {
     checkPassword(data.password);
-    logServiceKeyDiagnostics();
 
     const [{ data: asignaciones, error: asigError }, { data: preguntas, error: chatError }] =
       await Promise.all([
@@ -69,4 +43,90 @@ export const fetchAdminData = createServerFn({ method: "POST" })
     if (chatError) throw new Error(chatError.message);
 
     return { asignaciones: asignaciones ?? [], preguntas: preguntas ?? [] };
+  });
+
+const DEFAULT_SYSTEM_PROMPT =
+  "Eres el asistente de misión de INCOGNITTO. Tu rol es resolver dudas de un evaluador antes y durante la visita. Hablas en español peruano, eres breve, directo y operativo (máx. 4 oraciones).";
+
+const quizPreguntaSchema = z.object({
+  pregunta: z.string(),
+  opciones: z.array(z.string()),
+  correcta: z.number(),
+});
+
+const misionInputSchema = z.object({
+  id: z.string().optional(),
+  celular_evaluador: z.string().min(1, "El celular es obligatorio"),
+  nombre_evaluador: z.string().optional().default(""),
+  local_asignado: z.string().min(1, "El local asignado es obligatorio"),
+  campana: z.string().optional().default(""),
+  fecha_mision: z.string().optional().default(""),
+  video_url: z.string().optional().default(""),
+  categoria: z.string().optional().default(""),
+  pasos_evaluacion: z.array(z.string()).default([]),
+  alerta_identidad: z.string().optional().default(""),
+  preguntas_quiz: z.array(quizPreguntaSchema).default([]),
+  system_prompt_chat: z.string().optional().default(""),
+});
+
+const saveMisionSchema = z.object({
+  password: z.string().min(1),
+  mision: misionInputSchema,
+});
+
+export const saveMision = createServerFn({ method: "POST" })
+  .validator((data: unknown) => saveMisionSchema.parse(data))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const m = data.mision;
+
+    const payload = {
+      celular_evaluador: m.celular_evaluador.trim(),
+      nombre_evaluador: m.nombre_evaluador.trim() || null,
+      local_asignado: m.local_asignado.trim(),
+      campana: m.campana.trim() || null,
+      fecha_mision: m.fecha_mision || null,
+      video_url: m.video_url.trim(),
+      categoria: m.categoria.trim() || null,
+      pasos_evaluacion: m.pasos_evaluacion.map((p) => p.trim()).filter(Boolean),
+      alerta_identidad: m.alerta_identidad.trim(),
+      preguntas_quiz: m.preguntas_quiz.filter((q) => q.pregunta.trim()),
+      system_prompt_chat: m.system_prompt_chat.trim() || DEFAULT_SYSTEM_PROMPT,
+    };
+
+    if (m.id) {
+      const { error } = await supabaseAdmin
+        .from("asignaciones_mision")
+        .update(payload)
+        .eq("id", m.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabaseAdmin.from("asignaciones_mision").insert(payload);
+      if (error) throw new Error(error.message);
+    }
+
+    return { ok: true };
+  });
+
+const idSchema = z.object({ password: z.string().min(1), id: z.string().min(1) });
+
+export const deleteMision = createServerFn({ method: "POST" })
+  .validator((data: unknown) => idSchema.parse(data))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { error } = await supabaseAdmin.from("asignaciones_mision").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const reassignMision = createServerFn({ method: "POST" })
+  .validator((data: unknown) => idSchema.parse(data))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { error } = await supabaseAdmin
+      .from("asignaciones_mision")
+      .update({ estado: "pendiente", intentos_quiz: 0 })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
