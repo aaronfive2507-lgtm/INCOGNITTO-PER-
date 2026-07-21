@@ -455,6 +455,36 @@
     border-color: var(--blue-dim);
     color: var(--blue);
   }
+  .quiz-generate-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .quiz-generate-hint {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .btn-generate {
+    background: rgba(62, 158, 255, 0.1);
+    border: 1px solid var(--blue-dim);
+    color: var(--blue);
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-size: 12.5px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-generate:hover:not(:disabled) {
+    background: rgba(62, 158, 255, 0.18);
+    border-color: var(--blue);
+  }
+  .btn-generate:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
   .form-actions {
     display: flex;
     gap: 10px;

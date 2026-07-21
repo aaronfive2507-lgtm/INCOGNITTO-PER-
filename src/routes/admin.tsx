@@ -6,6 +6,7 @@ import {
   adminLogin,
   deleteMision,
   fetchAdminData,
+  generateQuiz,
   reassignMision,
   saveMision,
 } from "@/lib/admin.server";
@@ -442,14 +443,54 @@ function MisionForm({
   onSaved: () => void;
 }) {
   const save = useServerFn(saveMision);
+  const generate = useServerFn(generateQuiz);
   const [state, setState] = useState<MisionFormState>(
     initial ? misionFromExisting(initial) : emptyMision(),
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState("");
 
   const upd = <K extends keyof MisionFormState>(key: K, value: MisionFormState[K]) =>
     setState((prev) => ({ ...prev, [key]: value }));
+
+  const handleGenerateQuiz = async () => {
+    const pasos = state.pasos_evaluacion.filter((p) => p.trim());
+    if (!state.local_asignado.trim() || pasos.length === 0) {
+      setGenerateError(
+        "Completa el local asignado y al menos un paso de la visita antes de generar el quiz.",
+      );
+      return;
+    }
+    if (
+      state.preguntas_quiz.length > 0 &&
+      !confirm("Esto reemplazará las preguntas actuales del quiz. ¿Continuar?")
+    ) {
+      return;
+    }
+    setGenerating(true);
+    setGenerateError("");
+    try {
+      const res = await generate({
+        data: {
+          password,
+          contexto: {
+            local_asignado: state.local_asignado,
+            categoria: state.categoria,
+            campana: state.campana,
+            pasos_evaluacion: pasos,
+            alerta_identidad: state.alerta_identidad,
+          },
+        },
+      });
+      upd("preguntas_quiz", res.preguntas_quiz);
+    } catch (err) {
+      setGenerateError(err instanceof Error ? err.message : "No se pudo generar el quiz.");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -549,6 +590,29 @@ function MisionForm({
             value={state.alerta_identidad}
             onChange={(e) => upd("alerta_identidad", e.target.value)}
           />
+        </div>
+
+        <div className="field">
+          <div className="quiz-generate-row">
+            <label style={{ marginBottom: 0 }}>Quiz</label>
+            <button
+              type="button"
+              className="btn-generate"
+              onClick={handleGenerateQuiz}
+              disabled={generating}
+            >
+              {generating
+                ? "Generando…"
+                : state.preguntas_quiz.length > 0
+                  ? "↻ Regenerar quiz con IA"
+                  : "✨ Generar quiz con IA"}
+            </button>
+          </div>
+          <p className="quiz-generate-hint">
+            Claude redacta las 5 preguntas a partir del local, la categoría y los pasos de la visita
+            que ya escribiste arriba. Puedes editar el resultado antes de guardar.
+          </p>
+          {generateError && <p className="error-msg">{generateError}</p>}
         </div>
 
         <QuizEditor items={state.preguntas_quiz} onChange={(v) => upd("preguntas_quiz", v)} />

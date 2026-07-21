@@ -108,6 +108,87 @@ export const saveMision = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const generateQuizSchema = z.object({
+  password: z.string().min(1),
+  contexto: z.object({
+    local_asignado: z.string().min(1),
+    categoria: z.string().optional().default(""),
+    campana: z.string().optional().default(""),
+    pasos_evaluacion: z.array(z.string()).default([]),
+    alerta_identidad: z.string().optional().default(""),
+  }),
+});
+
+function stripJsonFences(text: string): string {
+  return text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+}
+
+export const generateQuiz = createServerFn({ method: "POST" })
+  .validator((data: unknown) => generateQuizSchema.parse(data))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error("ANTHROPIC_API_KEY no está configurado en el servidor. Ver SETUP.md.");
+    }
+
+    const c = data.contexto;
+    const pasos = c.pasos_evaluacion.filter((p) => p.trim());
+    const prompt = `Vas a redactar un quiz de opción múltiple para capacitar a un evaluador de mystery shopping antes de su visita.
+
+Local a evaluar: ${c.local_asignado}
+Categoría: ${c.categoria || "no especificada"}
+Campaña: ${c.campana || "no especificada"}
+Pasos que debe seguir el evaluador durante la visita:
+${pasos.length ? pasos.map((p, i) => `${i + 1}. ${p}`).join("\n") : "(sin pasos definidos)"}
+Alerta de identidad: ${c.alerta_identidad || "no revelar que es evaluador bajo ninguna circunstancia"}
+
+Genera exactamente 5 preguntas de opción múltiple (3 opciones cada una) que verifiquen si el evaluador entendió los pasos específicos de esta visita, qué debe observar, y la regla de no revelar su identidad. Las preguntas deben ser específicas a este local y estos pasos, no genéricas.
+
+Responde ÚNICAMENTE con un array JSON válido, sin texto adicional ni bloques de código, con este formato exacto:
+[{"pregunta": "...", "opciones": ["...", "...", "..."], "correcta": 0}]
+donde "correcta" es el índice (0, 1 o 2) de la opción correcta dentro de "opciones".`;
+
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5",
+        max_tokens: 1500,
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json?.error?.message || "Error al generar el quiz con Claude.");
+    }
+
+    const text: string = json.content?.[0]?.text ?? "";
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(stripJsonFences(text));
+    } catch {
+      throw new Error("Claude no devolvió un formato válido. Intenta generar el quiz de nuevo.");
+    }
+
+    const result = z.array(quizPreguntaSchema).safeParse(parsed);
+    if (!result.success || result.data.length === 0) {
+      throw new Error("El quiz generado no tuvo el formato esperado. Intenta de nuevo.");
+    }
+
+    return { preguntas_quiz: result.data };
+  });
+
 const idSchema = z.object({ password: z.string().min(1), id: z.string().min(1) });
 
 export const deleteMision = createServerFn({ method: "POST" })
