@@ -26,7 +26,9 @@ values (
   'Bajo ninguna circunstancia reveles que eres evaluador. Si te preguntan, mantén tu rol de cliente.',
   '[{"pregunta":"¿En cuánto tiempo debe saludarte el mesero?","opciones":["En cualquier momento","Antes de 1 minuto","Antes de 5 minutos"],"correcta":1},
     {"pregunta":"¿Puedes decir que eres evaluador?","opciones":["Sí, si preguntan","Sí, al pagar","No, nunca"],"correcta":2},
-    {"pregunta":"¿Cuándo llenas el formulario?","opciones":["Al día siguiente","Dentro de 30 min de salir","Antes de entrar"],"correcta":1}]'::jsonb
+    {"pregunta":"¿Cuándo llenas el formulario?","opciones":["Al día siguiente","Dentro de 30 min de salir","Antes de entrar"],"correcta":1},
+    {"pregunta":"¿Qué debes hacer si el mesero no ofrece ninguna promoción?","opciones":["Pedir que te ofrezca una","Anotar que no lo hizo, tal como ocurrió","No decir nada y salir"],"correcta":1},
+    {"pregunta":"¿Por qué debes hacer un pedido especial durante la visita?","opciones":["Para poner a prueba la paciencia del mesero","Para evaluar la disposición real del mesero ante algo fuera de rutina","No es necesario, es opcional"],"correcta":1}]'::jsonb
 );
 ```
 
@@ -37,11 +39,17 @@ Prueba con el celular `987654321` en `/capacitacion`.
 Ya existía y se extendió para registrar cada pregunta del chat en `chat_preguntas`. Debes:
 
 1. Confirmar que el secreto `ANTHROPIC_API_KEY` sigue configurado (dashboard → Edge Functions → Secrets). Si no existe, agrégalo con tu API key de [console.anthropic.com](https://console.anthropic.com).
-2. Volver a desplegar la función actualizada:
+2. **Importante**: `supabase/config.toml` ahora marca esta función con `verify_jwt = false` (la app la llama con la publishable key `sb_publishable_...`, que ya no es un JWT, y el gateway de Supabase la rechazaba antes de ejecutar el código — eso causaba el error "Invalid API key" / "Error al consultar al asistente" en el chat de `/capacitacion`). Este cambio de config solo se aplica al volver a desplegar:
    ```bash
    supabase functions deploy anthropic-chat
    ```
    (requiere Supabase CLI autenticado y vinculado al proyecto). `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` ya están disponibles automáticamente dentro de las funciones edge — no hace falta configurarlos a mano.
+
+## 3.1. Quiz: 5 preguntas, mínimo 4 correctas para aprobar
+
+El panel de administración ahora exige que cada misión tenga **exactamente 5 preguntas** de quiz (al guardar o generar con IA), y el evaluador necesita acertar **al menos 4 de 5** para pasar al chat de dudas.
+
+La misión de prueba de Aarón (`986832102`, Pollería Don Tito) y la del Paso 2 (`987654321`) se crearon antes de este cambio con solo 3 preguntas — con 3 preguntas es matemáticamente imposible sacar 4 correctas. Edítalas en `/admin` (botón **Editar** → **Generar quiz con IA**) para que tengan 5 preguntas antes de probar el flujo de nuevo.
 
 ## 4. Correo del formulario de contacto (Resend)
 

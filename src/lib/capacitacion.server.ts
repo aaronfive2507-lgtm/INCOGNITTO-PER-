@@ -23,10 +23,14 @@ const registrarQuizSchema = z.object({
   puntaje: z.number().int().min(0),
 });
 
+// El quiz siempre tiene 5 preguntas (impuesto en el panel de administración);
+// se necesitan al menos 4 correctas para aprobar.
+const PUNTAJE_MINIMO_APROBAR = 4;
+
 export const registrarResultadoQuizFn = createServerFn({ method: "POST" })
   .validator((data: unknown) => registrarQuizSchema.parse(data))
   .handler(async ({ data }) => {
-    const aprobado = data.puntaje >= 3;
+    const aprobado = data.puntaje >= PUNTAJE_MINIMO_APROBAR;
 
     const { error: insertError } = await supabaseAdmin
       .from("quiz_resultados")

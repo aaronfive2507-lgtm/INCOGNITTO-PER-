@@ -396,6 +396,10 @@ interface MisionFormState {
 const DEFAULT_SYSTEM_PROMPT =
   "Eres el asistente de misión de INCOGNITTO. Tu rol es resolver dudas de un evaluador antes y durante la visita. Hablas en español peruano, eres breve, directo y operativo (máx. 4 oraciones).";
 
+// El quiz de cada misión debe tener siempre exactamente esta cantidad de preguntas
+// (el evaluador necesita 4 de 5 correctas para aprobar — ver capacitacion.server.ts).
+const QUIZ_LENGTH = 5;
+
 function emptyMision(): MisionFormState {
   return {
     celular_evaluador: "",
@@ -496,6 +500,13 @@ function MisionForm({
     e.preventDefault();
     if (!state.celular_evaluador.trim() || !state.local_asignado.trim()) {
       setError("El celular y el local asignado son obligatorios.");
+      return;
+    }
+    const preguntasValidas = state.preguntas_quiz.filter((q) => q.pregunta.trim());
+    if (preguntasValidas.length !== QUIZ_LENGTH) {
+      setError(
+        `El quiz debe tener exactamente ${QUIZ_LENGTH} preguntas (tiene ${preguntasValidas.length}). Usa "Generar quiz con IA" o ajusta las preguntas manualmente.`,
+      );
       return;
     }
     setSaving(true);
@@ -685,7 +696,7 @@ function QuizEditor({
   onChange: (v: QuizPregunta[]) => void;
 }) {
   const add = () => {
-    if (items.length >= 6) return;
+    if (items.length >= QUIZ_LENGTH) return;
     onChange([...items, { pregunta: "", opciones: ["", "", ""], correcta: 0 }]);
   };
   const setAt = (i: number, q: QuizPregunta) => {
@@ -697,7 +708,9 @@ function QuizEditor({
 
   return (
     <div className="field">
-      <label>Quiz (hasta 6 preguntas)</label>
+      <label>
+        Quiz (exactamente {QUIZ_LENGTH} preguntas — {items.length}/{QUIZ_LENGTH})
+      </label>
       {items.map((q, i) => (
         <div className="quiz-question-block" key={i}>
           <div className="qhead">
@@ -734,7 +747,12 @@ function QuizEditor({
           ))}
         </div>
       ))}
-      <button type="button" className="btn-add" onClick={add} disabled={items.length >= 6}>
+      <button
+        type="button"
+        className="btn-add"
+        onClick={add}
+        disabled={items.length >= QUIZ_LENGTH}
+      >
         + Agregar pregunta
       </button>
     </div>

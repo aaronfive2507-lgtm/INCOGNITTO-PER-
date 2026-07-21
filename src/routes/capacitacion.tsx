@@ -22,6 +22,8 @@ export const Route = createFileRoute("/capacitacion")({
 
 type Step = "phone" | "loading" | "multi" | "mission" | "quiz" | "chat";
 
+const PUNTAJE_MINIMO_APROBAR = 4;
+
 function CapacitacionPage() {
   const buscarMision = useServerFn(buscarMisionPorCelular);
   const [step, setStep] = useState<Step>("phone");
@@ -309,7 +311,7 @@ function QuizStep({
   }
 
   if (done) {
-    const passed = score >= 3;
+    const passed = score >= PUNTAJE_MINIMO_APROBAR;
     return (
       <div>
         <div className="quiz-result">
@@ -330,8 +332,8 @@ function QuizStep({
           ) : (
             <>
               <p className="fail-msg">
-                Necesitas mínimo 3 de {total} respuestas correctas para continuar. Vuelve a ver el
-                video con atención antes de intentar el quiz otra vez.
+                Necesitas mínimo {PUNTAJE_MINIMO_APROBAR} de {total} respuestas correctas para
+                continuar. Vuelve a ver el video con atención antes de intentar el quiz otra vez.
               </p>
               <button className="btn-continue" style={{ marginTop: 0 }} onClick={onFail}>
                 Volver a ver el video

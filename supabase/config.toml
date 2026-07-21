@@ -1,1 +1,8 @@
 project_id = "crgbihaefbudqfosddwa"
+
+# La app llama a esta función con la publishable key (formato sb_publishable_...),
+# que ya NO es un JWT — con verify_jwt en true (el default), el gateway de Supabase
+# rechaza la llamada antes de que el código de la función se ejecute, lo que produce
+# el error genérico "Invalid API key" / "Error al consultar al asistente" en el cliente.
+[functions.anthropic-chat]
+verify_jwt = false

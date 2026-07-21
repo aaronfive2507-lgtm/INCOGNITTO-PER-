@@ -48,6 +48,9 @@ export const fetchAdminData = createServerFn({ method: "POST" })
 const DEFAULT_SYSTEM_PROMPT =
   "Eres el asistente de misión de INCOGNITTO. Tu rol es resolver dudas de un evaluador antes y durante la visita. Hablas en español peruano, eres breve, directo y operativo (máx. 4 oraciones).";
 
+// El quiz de cada misión debe tener siempre exactamente esta cantidad de preguntas.
+const QUIZ_LENGTH = 5;
+
 const quizPreguntaSchema = z.object({
   pregunta: z.string(),
   opciones: z.array(z.string()),
@@ -80,6 +83,13 @@ export const saveMision = createServerFn({ method: "POST" })
     checkPassword(data.password);
     const m = data.mision;
 
+    const preguntasValidas = m.preguntas_quiz.filter((q) => q.pregunta.trim());
+    if (preguntasValidas.length !== QUIZ_LENGTH) {
+      throw new Error(
+        `El quiz debe tener exactamente ${QUIZ_LENGTH} preguntas (tiene ${preguntasValidas.length}). Usa "Generar quiz con IA" o agrega/quita preguntas manualmente.`,
+      );
+    }
+
     const payload = {
       celular_evaluador: m.celular_evaluador.trim(),
       nombre_evaluador: m.nombre_evaluador.trim() || null,
@@ -90,7 +100,7 @@ export const saveMision = createServerFn({ method: "POST" })
       categoria: m.categoria.trim() || null,
       pasos_evaluacion: m.pasos_evaluacion.map((p) => p.trim()).filter(Boolean),
       alerta_identidad: m.alerta_identidad.trim(),
-      preguntas_quiz: m.preguntas_quiz.filter((q) => q.pregunta.trim()),
+      preguntas_quiz: preguntasValidas,
       system_prompt_chat: m.system_prompt_chat.trim() || DEFAULT_SYSTEM_PROMPT,
     };
 
@@ -148,7 +158,7 @@ Pasos que debe seguir el evaluador durante la visita:
 ${pasos.length ? pasos.map((p, i) => `${i + 1}. ${p}`).join("\n") : "(sin pasos definidos)"}
 Alerta de identidad: ${c.alerta_identidad || "no revelar que es evaluador bajo ninguna circunstancia"}
 
-Genera exactamente 5 preguntas de opción múltiple (3 opciones cada una) que verifiquen si el evaluador entendió los pasos específicos de esta visita, qué debe observar, y la regla de no revelar su identidad. Las preguntas deben ser específicas a este local y estos pasos, no genéricas.
+Genera EXACTAMENTE ${QUIZ_LENGTH} preguntas de opción múltiple (3 opciones cada una) que verifiquen si el evaluador entendió los pasos específicos de esta visita, qué debe observar, y la regla de no revelar su identidad. Las preguntas deben ser específicas a este local y estos pasos, no genéricas. Es obligatorio que el array tenga exactamente ${QUIZ_LENGTH} elementos, ni más ni menos.
 
 Responde ÚNICAMENTE con un array JSON válido, sin texto adicional ni bloques de código, con este formato exacto:
 [{"pregunta": "...", "opciones": ["...", "...", "..."], "correcta": 0}]
@@ -182,8 +192,13 @@ donde "correcta" es el índice (0, 1 o 2) de la opción correcta dentro de "opci
     }
 
     const result = z.array(quizPreguntaSchema).safeParse(parsed);
-    if (!result.success || result.data.length === 0) {
+    if (!result.success) {
       throw new Error("El quiz generado no tuvo el formato esperado. Intenta de nuevo.");
+    }
+    if (result.data.length !== QUIZ_LENGTH) {
+      throw new Error(
+        `Claude generó ${result.data.length} preguntas en vez de ${QUIZ_LENGTH}. Intenta generar de nuevo.`,
+      );
     }
 
     return { preguntas_quiz: result.data };

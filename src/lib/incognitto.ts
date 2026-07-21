@@ -72,11 +72,21 @@ export async function callClaude(opts: {
       asignacion_id: opts.asignacionId,
     }),
   });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.error || "Error al consultar al asistente.");
+  let data: Record<string, unknown> = {};
+  try {
+    data = await res.json();
+  } catch {
+    // el gateway puede responder sin cuerpo JSON (p.ej. rechazo antes de invocar la función)
   }
-  return data.text || "";
+  if (!res.ok) {
+    const detail =
+      (typeof data?.error === "string" && data.error) ||
+      (typeof data?.message === "string" && data.message) ||
+      res.statusText ||
+      "sin detalle";
+    throw new Error(`${detail} (HTTP ${res.status})`);
+  }
+  return (data.text as string) || "";
 }
 
 export function buildSystemPrompt(a: AsignacionMision): string {
