@@ -337,4 +337,11 @@
     color: var(--ink-dim);
     padding: 80px 0;
   }
+
+  main > .error-msg {
+    text-align: center;
+    color: var(--danger);
+    padding: 80px 0;
+    font-size: 14px;
+  }
 }

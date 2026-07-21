@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { Session } from "@supabase/supabase-js";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import "./admin.css";
-import { supabase } from "@/integrations/supabase/client";
+import { adminLogin, fetchAdminData } from "@/lib/admin.server";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/admin")({
@@ -17,28 +17,22 @@ type Asignacion = Tables<"asignaciones_mision">;
 type ChatPregunta = Tables<"chat_preguntas">;
 
 function AdminPage() {
-  const [session, setSession] = useState<Session | null | undefined>(undefined);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, []);
+  const [password, setPassword] = useState<string | null>(null);
 
   return (
     <div className="incognitto-admin">
-      {session === undefined && <div className="loading-state">Cargando…</div>}
-      {session === null && <LoginScreen />}
-      {session && <Dashboard session={session} />}
+      {password === null ? (
+        <LoginScreen onSuccess={setPassword} />
+      ) : (
+        <Dashboard password={password} onLogout={() => setPassword(null)} />
+      )}
     </div>
   );
 }
 
-function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+function LoginScreen({ onSuccess }: { onSuccess: (password: string) => void }) {
+  const login = useServerFn(adminLogin);
+  const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -46,22 +40,13 @@ function LoginScreen() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setLoading(false);
-    if (error) {
-      console.error("[admin login] Supabase auth error:", error.status, error.message, error);
-      if (error.message.toLowerCase().includes("invalid api key")) {
-        setError(
-          "Error de configuración: la conexión a Supabase no es válida (VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY). Revisa las variables de entorno del despliegue.",
-        );
-      } else if (error.message.toLowerCase().includes("invalid login credentials")) {
-        setError("Correo o contraseña incorrectos.");
-      } else {
-        setError(error.message);
-      }
+    try {
+      await login({ data: { password: input } });
+      onSuccess(input);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo verificar la contraseña.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,29 +54,20 @@ function LoginScreen() {
     <div className="login-wrap">
       <div className="login-card">
         <h1 className="serif">Acceso administración</h1>
-        <p className="sub">Ingresa con tu cuenta de INCOGNITTO.</p>
+        <p className="sub">Ingresa la contraseña del equipo INCOGNITTO.</p>
         <form onSubmit={onSubmit}>
-          <div className="field">
-            <label>Correo</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoFocus
-              required
-            />
-          </div>
           <div className="field">
             <label>Contraseña</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              autoFocus
               required
             />
           </div>
           <button type="submit" disabled={loading}>
-            {loading ? "Ingresando…" : "Ingresar"}
+            {loading ? "Verificando…" : "Ingresar"}
           </button>
           {error && <p className="error-msg">{error}</p>}
         </form>
@@ -100,30 +76,31 @@ function LoginScreen() {
   );
 }
 
-function Dashboard({ session }: { session: Session }) {
+function Dashboard({ password, onLogout }: { password: string; onLogout: () => void }) {
+  const getData = useServerFn(fetchAdminData);
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
   const [preguntas, setPreguntas] = useState<ChatPregunta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const [{ data: asigs }, { data: chats }] = await Promise.all([
-        supabase
-          .from("asignaciones_mision")
-          .select("*")
-          .order("fecha_mision", { ascending: false }),
-        supabase.from("chat_preguntas").select("*").order("fecha", { ascending: false }).limit(500),
-      ]);
-      if (cancelled) return;
-      setAsignaciones(asigs ?? []);
-      setPreguntas(chats ?? []);
-      setLoading(false);
-    })();
+    getData({ data: { password } })
+      .then((res) => {
+        if (cancelled) return;
+        setAsignaciones(res.asignaciones);
+        setPreguntas(res.preguntas);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "No se pudieron cargar los datos.");
+        setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [password, getData]);
 
   const total = asignaciones.length;
   const aprobados = asignaciones.filter(
@@ -146,8 +123,7 @@ function Dashboard({ session }: { session: Session }) {
             <span className="page-label">Panel de cumplimiento</span>
           </div>
           <div className="top-actions">
-            <span className="pill">{session.user.email}</span>
-            <button onClick={() => supabase.auth.signOut()}>Cerrar sesión</button>
+            <button onClick={onLogout}>Cerrar sesión</button>
           </div>
         </div>
       </header>
@@ -158,6 +134,8 @@ function Dashboard({ session }: { session: Session }) {
 
         {loading ? (
           <div className="loading-state">Cargando datos…</div>
+        ) : error ? (
+          <p className="error-msg">{error}</p>
         ) : (
           <>
             <div className="summary-grid">

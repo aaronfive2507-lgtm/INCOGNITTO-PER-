@@ -22,10 +22,23 @@ function createSupabaseClient() {
   // TEMPORARY DIAGNOSTIC — remove once the "Invalid API key" issue is confirmed fixed.
   // The URL is not sensitive; the key is only shown as length + first 5 chars.
   if (typeof window !== "undefined") {
-    console.info("[Supabase debug] URL source:", import.meta.env.VITE_SUPABASE_URL ? "VITE_SUPABASE_URL" : "process.env.SUPABASE_URL");
+    console.info(
+      "[Supabase debug] URL source:",
+      import.meta.env.VITE_SUPABASE_URL ? "VITE_SUPABASE_URL" : "process.env.SUPABASE_URL",
+    );
     console.info("[Supabase debug] URL value:", SUPABASE_URL);
-    console.info("[Supabase debug] KEY source:", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ? "VITE_SUPABASE_PUBLISHABLE_KEY" : "process.env.SUPABASE_PUBLISHABLE_KEY");
-    console.info("[Supabase debug] KEY length:", SUPABASE_PUBLISHABLE_KEY.length, "| first 5 chars:", SUPABASE_PUBLISHABLE_KEY.slice(0, 5));
+    console.info(
+      "[Supabase debug] KEY source:",
+      import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+        ? "VITE_SUPABASE_PUBLISHABLE_KEY"
+        : "process.env.SUPABASE_PUBLISHABLE_KEY",
+    );
+    console.info(
+      "[Supabase debug] KEY length:",
+      SUPABASE_PUBLISHABLE_KEY.length,
+      "| first 5 chars:",
+      SUPABASE_PUBLISHABLE_KEY.slice(0, 5),
+    );
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {

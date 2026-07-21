@@ -52,20 +52,23 @@ Ya existía y se extendió para registrar cada pregunta del chat en `chat_pregun
 
 Sin `RESEND_API_KEY`, el formulario muestra un error claro en vez de fallar silenciosamente.
 
-## 5. Usuarios del panel de administración
+## 5. Contraseña del panel de administración
 
-No se crean automáticamente. Ve a Supabase → **Authentication → Users → Add user** y crea las cuentas de Felipe, Vanessa y Fátima (email + contraseña). Cualquier usuario autenticado del proyecto puede entrar a `/admin` — no hay tabla de roles porque solo el equipo interno tendrá cuenta.
+`/admin` ya no usa cuentas individuales de Supabase Auth — usa una única contraseña compartida por el equipo (Felipe, Vanessa, Fátima), verificada del lado del servidor en `src/lib/admin.server.ts`. Los datos (`asignaciones_mision`, `chat_preguntas`) se leen con la service role key desde el servidor, así que nunca quedan expuestos por la clave pública aunque alguien inspeccione el tráfico del navegador.
+
+1. Elige una contraseña y configúrala como variable de entorno `ADMIN_PASSWORD` en Vercel (ver tabla del paso 6). No hay usuario/correo, solo esa contraseña.
+2. Necesitas también la **service role key** de tu proyecto Supabase: dashboard → **Settings → API → service_role** (la clave secreta, no la `anon`/`publishable`). Configúrala como `SUPABASE_SERVICE_ROLE_KEY` en Vercel — **nunca** la pongas en una variable `VITE_*` ni la subas a ningún archivo del repo, solo vive en las variables de entorno del servidor.
 
 ## 6. Variables de entorno necesarias en Vercel
 
-`src/integrations/supabase/client.server.ts` (que necesitaría `SUPABASE_SERVICE_ROLE_KEY`) no está en uso por ningún flujo actual — se puede omitir hasta que se implemente algo que realmente lo necesite.
-
-| Variable                        | Dónde se usa                                                       | Ya existe                       |
-| -------------------------------- | ------------------------------------------------------------------- | -------------------------------- |
+| Variable                        | Dónde se usa                                                      | Ya existe                       |
+| ------------------------------- | ------------------------------------------------------------------- | -------------------------------- |
 | `VITE_SUPABASE_URL`             | Cliente (browser)                                                  | Sí (`.env`)                     |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Cliente (browser)                                                  | Sí (`.env`)                     |
 | `SUPABASE_URL`                  | SSR / server functions                                             | Sí (`.env`)                     |
 | `SUPABASE_PUBLISHABLE_KEY`      | SSR / server functions                                             | Sí (`.env`)                     |
+| `SUPABASE_SERVICE_ROLE_KEY`     | `src/lib/admin.server.ts` (panel de administración)                | **Falta agregar**               |
+| `ADMIN_PASSWORD`                | `src/lib/admin.server.ts` (login del panel de administración)      | **Falta agregar**               |
 | `RESEND_API_KEY`                | `src/lib/contact.server.ts`                                        | **Falta agregar**               |
 | `ANTHROPIC_API_KEY`             | Secreto de la función edge `anthropic-chat` (Supabase, no Vercel)  | Confirmar que sigue configurado |
 
