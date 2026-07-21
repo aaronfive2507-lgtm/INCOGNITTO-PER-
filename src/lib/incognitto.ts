@@ -1,5 +1,4 @@
 // Tipos y helpers de datos para el portal de evaluadores de INCOGNITTO.
-import { supabase } from "@/integrations/supabase/client";
 
 export type QuizPregunta = {
   pregunta: string;
@@ -48,34 +47,6 @@ export function extractYoutubeId(input: string): string {
 export function toEmbedUrl(input: string): string {
   const id = extractYoutubeId(input);
   return id ? `https://www.youtube.com/embed/${id}` : "";
-}
-
-// --- Búsqueda de misión por celular (RPC, no expone la tabla cruda) ----
-
-export async function buscarMisionesPorCelular(celular: string): Promise<AsignacionMision[]> {
-  const { data, error } = await supabase.rpc("buscar_misiones_por_celular", {
-    p_celular: celular,
-  });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as AsignacionMision[];
-}
-
-// --- Registro de resultado de quiz (RPC) -------------------------------
-
-export async function registrarResultadoQuiz(
-  asignacionId: string,
-  puntaje: number,
-): Promise<{ aprobado: boolean; intentos: number }> {
-  const { data, error } = await supabase.rpc("registrar_resultado_quiz", {
-    p_asignacion_id: asignacionId,
-    p_puntaje: puntaje,
-  });
-  if (error) throw new Error(error.message);
-  const row = Array.isArray(data) ? data[0] : data;
-  return {
-    aprobado: Boolean(row?.aprobado),
-    intentos: Number(row?.intentos ?? 0),
-  };
 }
 
 // --- Chat con Claude (vía función edge, con registro server-side) ------

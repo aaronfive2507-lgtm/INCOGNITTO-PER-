@@ -1,15 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import "./capacitacion.css";
 import logo from "@/assets/incognitto-logo.png";
-import {
-  buildSystemPrompt,
-  buscarMisionesPorCelular,
-  callClaude,
-  registrarResultadoQuiz,
-  toEmbedUrl,
-  type AsignacionMision,
-} from "@/lib/incognitto";
+import { buscarMisionPorCelular, registrarResultadoQuizFn } from "@/lib/capacitacion.server";
+import { buildSystemPrompt, callClaude, toEmbedUrl, type AsignacionMision } from "@/lib/incognitto";
 
 export const Route = createFileRoute("/capacitacion")({
   head: () => ({
@@ -28,6 +23,7 @@ export const Route = createFileRoute("/capacitacion")({
 type Step = "phone" | "loading" | "multi" | "mission" | "quiz" | "chat";
 
 function CapacitacionPage() {
+  const buscarMision = useServerFn(buscarMisionPorCelular);
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
@@ -44,7 +40,8 @@ function CapacitacionPage() {
     setError("");
     setStep("loading");
     try {
-      const result = await buscarMisionesPorCelular(clean);
+      const res = await buscarMision({ data: { celular: clean } });
+      const result = res.asignaciones as unknown as AsignacionMision[];
       if (result.length === 0) {
         setStep("phone");
         setError(
@@ -269,6 +266,7 @@ function QuizStep({
   onPass: () => void;
   onFail: () => void;
 }) {
+  const registrarQuiz = useServerFn(registrarResultadoQuizFn);
   const total = a.preguntas_quiz.length;
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -288,10 +286,7 @@ function QuizStep({
         setDone(true);
         setSaving(true);
         try {
-          const result = await registrarResultadoQuiz(a.id, nextScore);
-          if (!result.aprobado) {
-            // dejamos ver el resultado; el usuario decide reintentar
-          }
+          await registrarQuiz({ data: { asignacion_id: a.id, puntaje: nextScore } });
         } finally {
           setSaving(false);
         }
