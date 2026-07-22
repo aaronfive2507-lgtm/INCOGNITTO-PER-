@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import "./admin.css";
 import {
   adminLogin,
+  buscarDatosLocal,
   deleteMision,
   fetchAdminData,
+  generatePasos,
   generateQuiz,
   reassignMision,
   saveMision,
@@ -448,6 +450,8 @@ function MisionForm({
 }) {
   const save = useServerFn(saveMision);
   const generate = useServerFn(generateQuiz);
+  const generateSteps = useServerFn(generatePasos);
+  const lookupLocal = useServerFn(buscarDatosLocal);
   const [state, setState] = useState<MisionFormState>(
     initial ? misionFromExisting(initial) : emptyMision(),
   );
@@ -455,6 +459,8 @@ function MisionForm({
   const [error, setError] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
+  const [generatingSteps, setGeneratingSteps] = useState(false);
+  const [generateStepsError, setGenerateStepsError] = useState("");
 
   const upd = <K extends keyof MisionFormState>(key: K, value: MisionFormState[K]) =>
     setState((prev) => ({ ...prev, [key]: value }));
@@ -493,6 +499,58 @@ function MisionForm({
       setGenerateError(err instanceof Error ? err.message : "No se pudo generar el quiz.");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleGenerateSteps = async () => {
+    if (!state.local_asignado.trim()) {
+      setGenerateStepsError("Completa el local asignado antes de generar los pasos.");
+      return;
+    }
+    const pasosActuales = state.pasos_evaluacion.filter((p) => p.trim());
+    if (
+      pasosActuales.length > 0 &&
+      !confirm("Esto reemplazará los pasos actuales de la visita. ¿Continuar?")
+    ) {
+      return;
+    }
+    setGeneratingSteps(true);
+    setGenerateStepsError("");
+    try {
+      const res = await generateSteps({
+        data: {
+          password,
+          contexto: {
+            local_asignado: state.local_asignado,
+            categoria: state.categoria,
+            campana: state.campana,
+          },
+        },
+      });
+      upd("pasos_evaluacion", res.pasos_evaluacion);
+    } catch (err) {
+      setGenerateStepsError(
+        err instanceof Error ? err.message : "No se pudieron generar los pasos.",
+      );
+    } finally {
+      setGeneratingSteps(false);
+    }
+  };
+
+  const handleLocalBlur = async () => {
+    const local = state.local_asignado.trim();
+    if (!local) return;
+    try {
+      const res = await lookupLocal({ data: { password, local_asignado: local } });
+      if (res.campana || res.categoria) {
+        setState((prev) => ({
+          ...prev,
+          campana: res.campana ?? prev.campana,
+          categoria: res.categoria ?? prev.categoria,
+        }));
+      }
+    } catch {
+      // autocompletar es solo una ayuda — si falla, no interrumpimos al usuario
     }
   };
 
@@ -555,8 +613,13 @@ function MisionForm({
           <input
             value={state.local_asignado}
             onChange={(e) => upd("local_asignado", e.target.value)}
+            onBlur={handleLocalBlur}
             required
           />
+          <p className="quiz-generate-hint">
+            Si este local ya tuvo una misión antes, campaña y categoría se autocompletan al salir
+            del campo (puedes editarlas igual).
+          </p>
         </div>
 
         <div className="form-row">
@@ -587,6 +650,29 @@ function MisionForm({
               placeholder="https://www.youtube.com/watch?v=..."
             />
           </div>
+        </div>
+
+        <div className="field">
+          <div className="quiz-generate-row">
+            <label style={{ marginBottom: 0 }}>Pasos de la visita</label>
+            <button
+              type="button"
+              className="btn-generate"
+              onClick={handleGenerateSteps}
+              disabled={generatingSteps}
+            >
+              {generatingSteps
+                ? "Generando…"
+                : state.pasos_evaluacion.filter((p) => p.trim()).length > 0
+                  ? "↻ Regenerar pasos con IA"
+                  : "✨ Generar pasos con IA"}
+            </button>
+          </div>
+          <p className="quiz-generate-hint">
+            Claude redacta un checklist específico según el local y la categoría. Puedes editar cada
+            paso antes de guardar.
+          </p>
+          {generateStepsError && <p className="error-msg">{generateStepsError}</p>}
         </div>
 
         <DynamicList

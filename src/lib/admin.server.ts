@@ -137,6 +137,28 @@ function stripJsonFences(text: string): string {
     .trim();
 }
 
+async function callClaudeForJson(apiKey: string, prompt: string): Promise<string> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-5",
+      max_tokens: 1500,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json?.error?.message || "Error al consultar a Claude.");
+  }
+  return json.content?.[0]?.text ?? "";
+}
+
 export const generateQuiz = createServerFn({ method: "POST" })
   .validator((data: unknown) => generateQuizSchema.parse(data))
   .handler(async ({ data }) => {
@@ -149,7 +171,7 @@ export const generateQuiz = createServerFn({ method: "POST" })
 
     const c = data.contexto;
     const pasos = c.pasos_evaluacion.filter((p) => p.trim());
-    const prompt = `Vas a redactar un quiz de opción múltiple para capacitar a un evaluador de mystery shopping antes de su visita.
+    const prompt = `Vas a redactar un quiz de opción múltiple para EVALUAR LA COMPRENSIÓN REAL — no la memorización — de un evaluador de mystery shopping antes de su visita.
 
 Local a evaluar: ${c.local_asignado}
 Categoría: ${c.categoria || "no especificada"}
@@ -158,32 +180,21 @@ Pasos que debe seguir el evaluador durante la visita:
 ${pasos.length ? pasos.map((p, i) => `${i + 1}. ${p}`).join("\n") : "(sin pasos definidos)"}
 Alerta de identidad: ${c.alerta_identidad || "no revelar que es evaluador bajo ninguna circunstancia"}
 
-Genera EXACTAMENTE ${QUIZ_LENGTH} preguntas de opción múltiple (3 opciones cada una) que verifiquen si el evaluador entendió los pasos específicos de esta visita, qué debe observar, y la regla de no revelar su identidad. Las preguntas deben ser específicas a este local y estos pasos, no genéricas. Es obligatorio que el array tenga exactamente ${QUIZ_LENGTH} elementos, ni más ni menos.
+Requisitos de las preguntas (muy importante, no los ignores):
+- NO hagas preguntas de memorización directa que solo repitan un dato textual de la lista de pasos (ej. "¿cuánto tiempo debe...?" cuando el paso ya lo dice literal). Eso es demasiado obvio.
+- La mayoría de las preguntas deben ser de escenario: plantea una situación concreta que podría pasar durante la visita ("¿qué harías si...?", "el vendedor te dice X, ¿cómo respondes?") y pregunta qué debería hacer, registrar u observar el evaluador.
+- Al menos 2 de las 5 preguntas deben requerir combinar o relacionar dos pasos/datos distintos del checklist, no solo uno aislado.
+- Las 2 opciones incorrectas de cada pregunta deben ser errores creíbles y comunes que un evaluador descuidado podría cometer — nunca opciones absurdas, graciosas o obviamente falsas a simple vista. Alguien que no entendió bien la misión debería poder dudar entre las 3 opciones.
+- Cada pregunta tiene una única respuesta correcta e inequívoca dado el contexto de arriba.
+- Las preguntas deben ser específicas a este local, categoría y estos pasos — no genéricas ni reutilizables para cualquier misión.
+
+Genera EXACTAMENTE ${QUIZ_LENGTH} preguntas de opción múltiple (3 opciones cada una). Es obligatorio que el array tenga exactamente ${QUIZ_LENGTH} elementos, ni más ni menos.
 
 Responde ÚNICAMENTE con un array JSON válido, sin texto adicional ni bloques de código, con este formato exacto:
 [{"pregunta": "...", "opciones": ["...", "...", "..."], "correcta": 0}]
 donde "correcta" es el índice (0, 1 o 2) de la opción correcta dentro de "opciones".`;
 
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5",
-        max_tokens: 1500,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-
-    const json = await res.json();
-    if (!res.ok) {
-      throw new Error(json?.error?.message || "Error al generar el quiz con Claude.");
-    }
-
-    const text: string = json.content?.[0]?.text ?? "";
+    const text = await callClaudeForJson(apiKey, prompt);
     let parsed: unknown;
     try {
       parsed = JSON.parse(stripJsonFences(text));
@@ -202,6 +213,76 @@ donde "correcta" es el índice (0, 1 o 2) de la opción correcta dentro de "opci
     }
 
     return { preguntas_quiz: result.data };
+  });
+
+const generatePasosSchema = z.object({
+  password: z.string().min(1),
+  contexto: z.object({
+    local_asignado: z.string().min(1),
+    categoria: z.string().optional().default(""),
+    campana: z.string().optional().default(""),
+  }),
+});
+
+export const generatePasos = createServerFn({ method: "POST" })
+  .validator((data: unknown) => generatePasosSchema.parse(data))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error("ANTHROPIC_API_KEY no está configurado en el servidor. Ver SETUP.md.");
+    }
+
+    const c = data.contexto;
+    const prompt = `Vas a redactar el checklist de pasos que debe seguir un evaluador de mystery shopping (INCOGNITTO) durante su visita a un local, para capacitarlo antes de ir.
+
+Local a evaluar: ${c.local_asignado}
+Categoría: ${c.categoria || "no especificada"}
+Campaña: ${c.campana || "no especificada"}
+
+Genera entre 5 y 8 pasos concretos y específicos al tipo de negocio de este local (por ejemplo: en un restaurante, pasos sobre pedir la carta, tiempo de espera, calidad del servicio, limpieza del local; en una concesionaria de autos, pasos sobre atención del vendedor, tiempo de espera, presentación de modelos, prueba de manejo, seguimiento post-visita). Cada paso debe describir una acción u observación puntual y verificable que el evaluador puede ejecutar y registrar durante la visita — no consejos genéricos.
+
+Responde ÚNICAMENTE con un array JSON de strings, sin texto adicional ni bloques de código, con este formato exacto:
+["Paso 1...", "Paso 2...", "Paso 3..."]`;
+
+    const text = await callClaudeForJson(apiKey, prompt);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(stripJsonFences(text));
+    } catch {
+      throw new Error("Claude no devolvió un formato válido. Intenta generar los pasos de nuevo.");
+    }
+
+    const result = z.array(z.string()).safeParse(parsed);
+    if (!result.success || result.data.length === 0) {
+      throw new Error("Los pasos generados no tuvieron el formato esperado. Intenta de nuevo.");
+    }
+
+    return { pasos_evaluacion: result.data };
+  });
+
+const buscarLocalSchema = z.object({
+  password: z.string().min(1),
+  local_asignado: z.string().min(1),
+});
+
+export const buscarDatosLocal = createServerFn({ method: "POST" })
+  .validator((data: unknown) => buscarLocalSchema.parse(data))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("asignaciones_mision")
+      .select("campana, categoria")
+      .ilike("local_asignado", data.local_asignado.trim())
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (error) throw new Error(error.message);
+
+    const row = rows?.[0];
+    return { campana: row?.campana ?? null, categoria: row?.categoria ?? null };
   });
 
 const idSchema = z.object({ password: z.string().min(1), id: z.string().min(1) });
